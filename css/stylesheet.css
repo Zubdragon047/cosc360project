@@ -41,6 +41,13 @@ header {
     button:hover {cursor: pointer;}
 }
 
+.search-container {
+    display: flex;
+    justify-content: flex-end; /* Aligns to the right */
+    margin-right: 20px; /* Adds spacing from the edge */
+    margin-top: 10px;
+}
+
 footer {
     padding: 20px 50px;
 }
