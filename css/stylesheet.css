@@ -78,3 +78,22 @@ h3 {
     align-items: center;
     img {width: 150px;} 
 }
+
+#login-form {
+    justify-self: center;
+    width: max-content;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgb(124, 228, 249);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2em;
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #email-error-message {color: red;}
+    #password-error-message {color: red;}
+}
