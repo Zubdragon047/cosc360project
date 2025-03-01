@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             msg.textContent = "Must enter search string";
         } else {
-            passmsg.textContent = "";
+            msg.textContent = "";
         }
     });
 })

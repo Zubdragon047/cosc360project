@@ -2,21 +2,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("add-book-form");
     form.setAttribute("novalidate", true);
     form.addEventListener("submit", (e) => {
-        const inputemail = document.getElementById("book-title");
-        const inputpassword = document.getElementById("book-description");
-        const emailmsg = document.getElementById("title-error-message");
-        const passmsg = document.getElementById("description-error-message");
-        if (inputemail.value == null || inputemail.value == "" || !inputemail.value.includes('@')) {
+        const inputtitle = document.getElementById("book-title");
+        const inputdesc = document.getElementById("book-description");
+        const titlemsg = document.getElementById("title-error-message");
+        const descmsg = document.getElementById("description-error-message");
+        if (inputtitle.value == null || inputtitle.value == "") {
             e.preventDefault();
-            emailmsg.textContent = "Must enter a book title";
+            titlemsg.textContent = "Must enter a book title";
         } else {
-            emailmsg.textContent = "";
+            titlemsg.textContent = "";
         }
-        if (inputpassword.value == null || inputpassword.value == "") {
+        if (inputdesc.value == null || inputdesc.value == "") {
             e.preventDefault();
-            passmsg.textContent = "Must enter a book description";
+            descmsg.textContent = "Must enter a book description";
         } else {
-            passmsg.textContent = "";
+            descmsg.textContent = "";
         }
     });
 })
