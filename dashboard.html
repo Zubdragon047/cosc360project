@@ -27,6 +27,25 @@
 
 <div class="main-container">
     <h2>Dashboard</h2>
+    <h3>Add Listing</h3>
+    <form id="add-book-form" method="post"
+            action="http://www.randyconnolly.com/tests/process.php"
+            novalidate>
+            <div class="form-group">
+                <label for="book-title">Title</label>
+                <input type="text" id="book-title" name="book-title" placeholder="Enter book title." required>
+                <span id="title-error-message"></span>
+            </div>
+            <div class="form-group">
+                <label for="book-description">Description</label>
+                <textarea id="book-description" name="book-desription" placeholder="Enter book description." required></textarea>
+                <span id="description-error-message"></span>
+            </div>
+            <div class="form-buttons">
+                <button type="submit" class="submit">Submit</button>
+            </div>
+        </form>
+    <h3>My Listings</h3>
 </div>
 
 <footer>
