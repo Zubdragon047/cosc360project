@@ -29,6 +29,35 @@
     <div>
         <h2>Register</h2>
         <h3>Create a user account</h3>
+        <form id="register-form" method="post"
+            action="http://www.randyconnolly.com/tests/process.php"
+            novalidate>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="register-email" name="email" placeholder="Enter login email." required>
+                <span id="email-error-message"></span>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="register-password" name="password" placeholder="Enter login password." required>
+                <span id="password-error-message"></span>
+            </div>
+            <div class="form-group">
+                <label for="firstname">First Name</label>
+                <input type="text" id="register-firstname" name="firstname" placeholder="Enter your first name (OPTIONAL)">
+            </div>
+            <div class="form-group">
+                <label for="lastname">Last Name</label>
+                <input type="text" id="register-lastname" name="lastname" placeholder="Enter your last name (OPTIONAL)">
+            </div>
+            <div class="form-group">
+                <label for="profilepic">Profile Picture</label>
+                <input type="file" id="register-profilepic" name="profilepic" placeholder="Upload a profile picture (OPTIONAL)">
+            </div>
+            <div class="form-buttons">
+                <button type="submit" class="submit">Submit</button>
+            </div>
+        </form>
     </div>
     
 </div>
