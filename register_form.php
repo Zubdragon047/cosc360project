@@ -29,12 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     if (isset($_POST['firstname'])) {
         $firstname = $_POST['firstname'];
-        if ($firstname == "") $firstname = " ";
     }
     if (isset($_POST['lastname'])) {
         $lastname = $_POST['lastname'];
-        if ($lastname == "") $lastname = " ";
     }
+    $profilepic = "";
 
     try {
         require_once('protected/config.php');
@@ -52,9 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'password' => $password,
             'email' => $email,
             'firstname'=> $firstname,
-            'lastname'=> $lastname
+            'lastname'=> $lastname,
+            'profilepic' => $profilepic
         ];
-        $sql = "insert into users(username,password,email,firstname,lastname) values(:username,:password,:email,:firstname,:lastname)";
+        $sql = "insert into users values(:username,:password,:email,:firstname,:lastname,:profilepic)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";
