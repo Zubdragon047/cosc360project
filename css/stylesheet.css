@@ -115,6 +115,7 @@ h3 {
         flex-direction: column;
         align-items: center;
     }
+    #name-error-message {color: red;}
     #email-error-message {color: red;}
     #password-error-message {color: red;}
     input {width: 35ch;}
