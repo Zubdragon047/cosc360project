@@ -30,17 +30,22 @@
         <h2>Register</h2>
         <h3>Create a user account</h3>
         <form id="register-form" method="post"
-            action="http://www.randyconnolly.com/tests/process.php"
+            action="register_form.php"
             novalidate>
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="register-email" name="email" placeholder="Enter login email." required>
-                <span id="email-error-message"></span>
+                <label for="username">User Name</label>
+                <input type="text" id="register-username" name="username" placeholder="Enter login name." required>
+                <span style="color:red" id="username-error-message"></span>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="register-password" name="password" placeholder="Enter login password." required>
                 <span id="password-error-message"></span>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="register-email" name="email" placeholder="Enter login email." required>
+                <span id="email-error-message"></span>
             </div>
             <div class="form-group">
                 <label for="firstname">First Name</label>
