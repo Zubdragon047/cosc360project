@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const inputname = document.getElementById("register-username");
         const inputpassword = document.getElementById("register-password");
         const inputemail = document.getElementById("register-email");
-        const namemsg = document.getElementById("name-error-message");
+        const namemsg = document.getElementById("username-error-message");
         const passmsg = document.getElementById("password-error-message");
         const emailmsg = document.getElementById("email-error-message");
         if (inputname.value == null || inputname.value == "") {
