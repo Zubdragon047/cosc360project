@@ -17,6 +17,7 @@
                     <?php echo "<h3>Welcome ".$_SESSION['username']."</h3>"; ?>
                     <a href="logout.php">Logout</a>
                     <a href="myaccount.php">My Account</a>
+                    <?php echo '<img class="header-profilepic" src="'.$_SESSION['profilepic'].'">'; ?>
                 </nav>
             <?php else: ?>
                 <nav class="header-nav-top">
@@ -37,6 +38,15 @@
     <div>
         <h2>My Account</h2>
         <h3>User Details</h3>
+        <?php
+        echo "<p>Username: ".$_SESSION['username']."</p>";
+        echo "<p>Password: ".$_SESSION['password']."</p>";
+        echo "<p>Email: ".$_SESSION['email']."</p>";
+        echo "<p>First Name:: ".$_SESSION['firstname']."</p>";
+        echo "<p>Last Name: ".$_SESSION['lastname']."</p>";
+        echo "<p>Profile Pic: </p>:";
+        echo '<img class="account-profilepic" src="'.$_SESSION['profilepic'].'">';
+        ?>
     </div>
     
 </div>

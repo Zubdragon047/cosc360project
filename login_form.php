@@ -15,7 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $result = $pdo->query($sql);
         while ($row = $result->fetch()) {
             if ($row['username'] == $username) {
-                if ($row['password'] != $password) {
+                if ($row['password'] == $password) {
+                    session_start();
+                    $_SESSION['username'] = $username;
+                    $_SESSION['password'] = $password;
+                    $_SESSION['email'] = $row['email'];
+                    $_SESSION['firstname'] = $row['firstname'];
+                    $_SESSION['lastname'] = $row['lastname'];
+                    $_SESSION['profilepic'] = $row['profilepic'];
+                    header('Location: dashboard.php');
+                    die();
+                } else {
                     echo "Wrong password, redirecting to login to try again...";
                     header('Refresh: 5; URL=login.php');
                     die();
@@ -26,10 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 die();
             }
         }
-        session_start();
-        $_SESSION['username'] = $username;
-        $_SESSION['profilepic'] = "./profilepics".$username.".";
-        header('Location: dashboard.php');
     } catch(PDOException $e) {
         die($e->getMessage());
     }
