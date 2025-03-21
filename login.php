@@ -11,11 +11,19 @@
     <header>
         <h1>Book Exchange</h1>
         <div class="header-rightside">
-            <nav class="header-nav-top">
-                <a href="login.php">Login</a> /
-                <a href="register.php">Register</a> /
-                <a href="myaccount.php">My Account</a>
-            </nav>
+            <?php session_start(); ?>
+            <?php if (isset($_SESSION['username'])): ?>
+                <nav class="header-nav-top">
+                    <?php echo "<h3>Welcome ".$_SESSION['username']."</h3>"; ?>
+                    <a href="logout.php">Logout</a>
+                    <a href="myaccount.php">My Account</a>
+                </nav>
+            <?php else: ?>
+                <nav class="header-nav-top">
+                    <a href="login.php">Login</a> /
+                    <a href="register.php">Register</a>
+                </nav>
+            <?php endif; ?>
             <nav class="header-nav-bottom">
                 <a href="home.php"><button>Home</button></a>
                 <a href="about.php"><button>About</button></a>
@@ -29,12 +37,12 @@
     <div>
         <h2>Login</h2>
         <form id="login-form" method="post"
-            action="http://www.randyconnolly.com/tests/process.php"
+            action="login_form.php"
             novalidate>
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="login-email" name="email" placeholder="Enter login email." required>
-                <span id="email-error-message"></span>
+                <label for="username">Username</label>
+                <input type="text" id="login-username" name="username" placeholder="Enter login username." required>
+                <span id="name-error-message"></span>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
