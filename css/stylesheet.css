@@ -20,6 +20,15 @@ header {
     padding: 0 50px;
 }
 
+.header-profilepic {
+    width: 50px;
+    max-height: 75px;
+}
+
+.account-profilepic {
+    width: 200px;
+}
+
 .header-rightside {
     display: flex;
     flex-direction: column;

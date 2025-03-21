@@ -17,6 +17,7 @@
                     <?php echo "<h3>Welcome ".$_SESSION['username']."</h3>"; ?>
                     <a href="logout.php">Logout</a>
                     <a href="myaccount.php">My Account</a>
+                    <?php echo '<img class="header-profilepic" src="'.$_SESSION['profilepic'].'">'; ?>
                 </nav>
             <?php else: ?>
                 <nav class="header-nav-top">
