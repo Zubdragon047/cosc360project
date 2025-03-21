@@ -12,15 +12,15 @@
         <h1>Book Exchange</h1>
         <div class="header-rightside">
             <nav class="header-nav-top">
-                <a href="login.html">Login</a> /
-                <a href="register.html">Register</a> /
-                <a href="myaccount.html">My Account</a>
+                <a href="login.php">Login</a> /
+                <a href="register.php">Register</a> /
+                <a href="myaccount.php">My Account</a>
             </nav>
             <nav class="header-nav-bottom">
-                <a href="home.html"><button>Home</button></a>
-                <a href="about.html"><button>About</button></a>
-                <a href="browse.html"><button>Browse</button></a>
-                <a href="dashboard.html"><button>Dashboard</button></a>
+                <a href="home.php"><button>Home</button></a>
+                <a href="about.php"><button>About</button></a>
+                <a href="browse.php"><button>Browse</button></a>
+                <a href="dashboard.php"><button>Dashboard</button></a>
             </nav>
         </div>
     </header>
@@ -51,10 +51,10 @@
 
 <footer>
     <nav>
-        <a href="home.html">| Home |</a>
-        <a href="about.html"> About |</a>
-        <a href="browse.html"> Browse |</a>
-        <a href="dashboard.html"> Dashboard |</a>
+        <a href="home.php">| Home |</a>
+        <a href="about.php"> About |</a>
+        <a href="browse.php"> Browse |</a>
+        <a href="dashboard.php"> Dashboard |</a>
     </nav>
 </footer>
 </body>

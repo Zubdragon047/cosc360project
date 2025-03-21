@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";
-        header('Refresh: 5; URL=login.html');
+        header('Refresh: 5; URL=login.php');
     } catch(PDOException $e) {
         die($e->getMessage());
     }
