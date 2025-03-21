@@ -29,12 +29,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     if (isset($_POST['firstname'])) {
         $firstname = $_POST['firstname'];
-        if ($firstname == "") $firstname = " ";
     }
     if (isset($_POST['lastname'])) {
         $lastname = $_POST['lastname'];
-        if ($lastname == "") $lastname = " ";
     }
+    
+    $max_file_size = 10000000;
+    $valid_ext = array("jpg", "bmp", "gif");
+    $valid_mime = array("image/jpeg","image/bmp","image/gif");
+    $exploded = explode(".", $_FILES["profilepic"]["name"]);
+    $ext = end($exploded);
+    if ($_FILES["profilepic"]["error"] != UPLOAD_ERR_OK) {
+        die("File upload error.");
+    }
+    if ($_FILES["profilepic"]["size"] > $max_file_size) {
+        die("File size larger than 10mb.");
+    }
+    if (!in_array($_FILES["profilepic"]["type"], $valid_mime) || !in_array($ext, $valid_ext)) {
+        die("Invalid file type.");
+    }
+    if (!move_uploaded_file($_FILES["profilepic"]["tmp_name"], "./profilepics/".$username.".".$ext)) {
+        die("Unable to move file to destination folder.");
+    }
+    $profilepic = "./profilepics/".$username.".".$ext;
 
     try {
         require_once('protected/config.php');
@@ -52,9 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'password' => $password,
             'email' => $email,
             'firstname'=> $firstname,
-            'lastname'=> $lastname
+            'lastname'=> $lastname,
+            'profilepic' => $profilepic
         ];
-        $sql = "insert into users(username,password,email,firstname,lastname) values(:username,:password,:email,:firstname,:lastname)";
+        $sql = "insert into users values(:username,:password,:email,:firstname,:lastname,:profilepic)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";
