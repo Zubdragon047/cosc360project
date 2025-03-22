@@ -155,6 +155,7 @@ h3 {
     }
     #title-error-message {color: red;}
     #description-error-message {color: red;}
+    #category-error-message {color: red}
     #book-title {width: 125ch;}
     #book-description {width: 125ch; height: 10ch}
 }
