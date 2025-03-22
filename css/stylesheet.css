@@ -155,8 +155,8 @@ h3 {
     }
     #title-error-message {color: red;}
     #description-error-message {color: red;}
-    #book-title {width: 75ch;}
-    #book-description {width: 100ch; height: 20ch}
+    #book-title {width: 125ch;}
+    #book-description {width: 125ch; height: 10ch}
 }
 
 #search-form {

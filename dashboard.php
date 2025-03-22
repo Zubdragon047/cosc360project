@@ -36,6 +36,8 @@
 
 <div class="main-container">
     <h2>Dashboard</h2>
+    <?php if (!isset($_SESSION['username'])): echo '<h3 style="color:red">Must be logged in to use dashboard.</h3>';
+    else: ?>
     <h3>Add Listing</h3>
     <form id="add-book-form" method="post"
             action="http://www.randyconnolly.com/tests/process.php"
@@ -55,6 +57,8 @@
             </div>
         </form>
     <h3>My Listings</h3>
+    <?php endif; ?>
+    
 </div>
 
 <footer>
