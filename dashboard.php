@@ -41,6 +41,7 @@
     <h3>Add Listing</h3>
     <form id="add-book-form" method="post"
             action="http://www.randyconnolly.com/tests/process.php"
+            enctype="multipart/form-data"
             novalidate>
             <div class="form-group">
                 <label for="book-title">Title</label>
@@ -51,6 +52,23 @@
                 <label for="book-description">Description</label>
                 <textarea id="book-description" name="book-desription" placeholder="Enter book description." required></textarea>
                 <span id="description-error-message"></span>
+            </div>
+            <div>
+                <label for="book-category">Category</label>
+                <select id="book-category" name="book-category">
+                    <option value=" ">Choose a genre/category</option>
+                    <option value="non-fiction">non-fiction</option>
+                    <option value="fantasy">fantasy</option>
+                    <option value="sci-fi">sci-fi</option>
+                    <option value="romance">romance</option>
+                    <option value="mystery">mystery</option>
+                    <option value="horror">horror</option>
+                </select>
+                <span id="category-error-message"></span>
+            </div>
+            <div class="form-group">
+                <label for="book-picture">(OPTIONAL) Cover Image (jpg/gif/bmp/png less than 10mb)</label>
+                <input type="file" id="book-picture" name="book-picture">
             </div>
             <div class="form-buttons">
                 <button type="submit" class="submit">Submit</button>
