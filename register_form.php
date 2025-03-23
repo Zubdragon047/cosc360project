@@ -39,19 +39,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $valid_mime = array("image/jpeg","image/bmp","image/gif");
     $exploded = explode(".", $_FILES["profilepic"]["name"]);
     $ext = end($exploded);
-    if ($_FILES["profilepic"]["error"] != UPLOAD_ERR_OK) {
-        die("File upload error.");
+    if ($_FILES['profilepic']['error'] == 0) {
+        if ($_FILES["profilepic"]["size"] > $max_file_size) {
+            die("File size larger than 10mb.");
+        }
+        if (!in_array($_FILES["profilepic"]["type"], $valid_mime) || !in_array($ext, $valid_ext)) {
+            die("Invalid file type.");
+        }
+        if (!move_uploaded_file($_FILES["profilepic"]["tmp_name"], "./profilepics/".$username.".".$ext)) {
+            die("Unable to move file to destination folder.");
+        }
+        $profilepic = "./profilepics/".$username.".".$ext;
     }
-    if ($_FILES["profilepic"]["size"] > $max_file_size) {
-        die("File size larger than 10mb.");
+    else {
+        $profilepic = "./images/emptyprofilepic.jpg";
     }
-    if (!in_array($_FILES["profilepic"]["type"], $valid_mime) || !in_array($ext, $valid_ext)) {
-        die("Invalid file type.");
-    }
-    if (!move_uploaded_file($_FILES["profilepic"]["tmp_name"], "./profilepics/".$username.".".$ext)) {
-        die("Unable to move file to destination folder.");
-    }
-    $profilepic = "./profilepics/".$username.".".$ext;
+    
 
     try {
         require_once('protected/config.php');
@@ -70,9 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'email' => $email,
             'firstname'=> $firstname,
             'lastname'=> $lastname,
-            'profilepic' => $profilepic
+            'profilepic' => $profilepic,
+            'type' => 'user'
         ];
-        $sql = "insert into users values(:username,:password,:email,:firstname,:lastname,:profilepic)";
+        $sql = "insert into users values(:username,:password,:email,:firstname,:lastname,:profilepic,:type)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";
