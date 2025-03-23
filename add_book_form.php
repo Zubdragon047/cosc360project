@@ -41,9 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         if (!in_array($_FILES["book-picture"]["type"], $valid_mime) || !in_array($ext, $valid_ext)) {
             die("Invalid file type.");
         }
-        if (!move_uploaded_file($_FILES["book-picture"]["tmp_name"], "./bookpics/".$username.".".$ext)) {
-            die("Unable to move file to destination folder.");
-        }
         $needimagepath = true;
     }
 
@@ -65,6 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $row = $result->fetch();
         $num = $row['id'];
         if ($needimagepath) {
+            if (!move_uploaded_file($_FILES["book-picture"]["tmp_name"], "./bookpics/".$num.".".$ext)) {
+                die("Unable to move file to destination folder.");
+            }
             $sql = "update books set coverimage=? where id=?";
             $stmt = $pdo->prepare($sql);
             $stmt->bindValue(1, "./bookpics/".$num.".".$ext);
