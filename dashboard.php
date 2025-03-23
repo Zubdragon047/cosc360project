@@ -37,7 +37,9 @@
 
 <div class="main-container">
     <h2>Dashboard</h2>
-    <?php if (!isset($_SESSION['username'])): echo '<h3 style="color:red">Must be logged in to use dashboard.</h3>';
+    <?php 
+    if (!isset($_SESSION['username'])):
+        echo '<h3 style="color:red">Must be logged in to use dashboard.</h3>';
     else: ?>
     <h3>Add Listing</h3>
     <form id="add-book-form" method="post"
@@ -64,6 +66,7 @@
                     <option value="romance">romance</option>
                     <option value="mystery">mystery</option>
                     <option value="horror">horror</option>
+                    <option value="other">other</option>
                 </select>
                 <span id="category-error-message"></span>
             </div>
@@ -76,6 +79,29 @@
             </div>
         </form>
     <h3>My Listings</h3>
+    <?php
+    try {
+        require_once('protected/config.php');
+        $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $sql = "select * from books where username=?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(1, $_SESSION['username']);
+        $stmt->execute();
+        while ($row = $stmt->fetch()) {
+            echo "<div class='mylisting'>";
+            echo "<img class='mylisting-image' src=".$row['coverimage'].">";
+            echo "<div class='mylisting-info'>";
+            echo "<p>Title: ".$row['title']."</p>";
+            echo "<p>Description: ".$row['description']."</p>";
+            echo "<p>Category: ".$row['category']."</p>";
+            echo "</div>";
+            echo "</div>";
+        }
+    } catch(PDOException $e) {
+        die($e->getMessage());
+    }
+    ?>
     <?php endif; ?>
     
 </div>
