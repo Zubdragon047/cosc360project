@@ -30,12 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     header('Refresh: 5; URL=login.php');
                     die();
                 }
-            } else {
-                echo "Invalid username, redirecting to login to try again...";
-                header('Refresh: 5; URL=login.php');
-                die();
             }
         }
+        echo "Invalid username, redirecting to login to try again...";
+        header('Refresh: 5; URL=login.php');
+        die();
     } catch(PDOException $e) {
         die($e->getMessage());
     }
