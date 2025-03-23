@@ -40,7 +40,7 @@
     else: ?>
     <h3>Add Listing</h3>
     <form id="add-book-form" method="post"
-            action="http://www.randyconnolly.com/tests/process.php"
+            action="add_book_form.php"
             enctype="multipart/form-data"
             novalidate>
             <div class="form-group">
@@ -50,7 +50,7 @@
             </div>
             <div class="form-group">
                 <label for="book-description">Description</label>
-                <textarea id="book-description" name="book-desription" placeholder="Enter book description." required></textarea>
+                <textarea id="book-description" name="book-description" placeholder="Enter book description." required></textarea>
                 <span id="description-error-message"></span>
             </div>
             <div>
