@@ -1,14 +1,17 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("search-form");
-    form.setAttribute("novalidate", true);
-    form.addEventListener("submit", (e) => {
-        const input = document.getElementById("search");
-        const msg = document.getElementById("search-error-message");
-        if (input.value == null || input.value == "") {
-            e.preventDefault();
-            msg.textContent = "Must enter search string";
-        } else {
-            msg.textContent = "";
-        }
-    });
-})
+document.addEventListener("DOMContentLoaded", function() {
+    // Initialize filter functionality
+    const searchForm = document.getElementById("search-form");
+    const categoryFilter = document.getElementById("category-filter");
+    const statusFilter = document.getElementById("status-filter");
+    
+    if (searchForm && categoryFilter && statusFilter) {
+        // Auto-submit form when filters change
+        categoryFilter.addEventListener("change", function() {
+            searchForm.submit();
+        });
+        
+        statusFilter.addEventListener("change", function() {
+            searchForm.submit();
+        });
+    }
+}); 
