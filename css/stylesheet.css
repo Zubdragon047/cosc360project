@@ -211,6 +211,7 @@ h3 {
     #search {width: 75ch}
 }
 
+
 .mylisting {
     border: 3px solid black;
     border-radius: 8px;
@@ -223,5 +224,192 @@ h3 {
 
 .mylisting-image {
     width: 200px;
+}
+
+
+/* Breadcrumb Navigation Styles */
+.breadcrumb {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+.breadcrumb a {
+    color: #333;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* Thread Listing Styles */
+.threads-container {
+    margin: 20px 0;
+}
+
+.thread-item {
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: rgb(124, 228, 249);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.thread-item h3 {
+    margin-top: 0;
+}
+
+.thread-item a {
+    color: #333;
+    text-decoration: none;
+}
+
+.thread-item a:hover {
+    text-decoration: underline;
+}
+
+.thread-meta {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.thread-preview {
+    margin-top: 10px;
+}
+
+.create-thread {
+    margin: 20px 0;
+}
+
+/* Thread Detail Styles */
+.thread-detail {
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: rgb(124, 228, 249);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.thread-content {
+    margin-top: 15px;
+    line-height: 1.6;
+}
+
+/* Comment Styles */
+.comment {
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-profilepic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.comment-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-author {
+    font-weight: bold;
+}
+
+.comment-date {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.comment-content {
+    margin-left: 50px;
+    line-height: 1.5;
+}
+
+.comment-form {
+    margin: 20px 0;
+}
+
+.comment-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+#comment-error-message {
+    color: red;
+    font-size: 0.9em;
+}
+
+/* Thread Creation Form Styles */
+.create-thread-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+#create-thread-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background-color: rgb(124, 228, 249);
+    border-radius: 8px;
+}
+
+#thread-title {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#thread-content {
+    width: 100%;
+    min-height: 200px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+#title-error-message,
+#content-error-message {
+    color: red;
+    font-size: 0.9em;
+}
+
+.cancel {
+    background-color: #ccc;
+    margin-left: 10px;
+}
+
+/* Search Styles */
+.search-container {
+    margin: 20px 0;
+}
+
+#thread-search {
+    padding: 8px;
+    width: 300px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
 }
 

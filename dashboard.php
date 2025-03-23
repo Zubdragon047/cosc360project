@@ -30,6 +30,7 @@
                 <a href="about.php"><button>About</button></a>
                 <a href="browse.php"><button>Browse</button></a>
                 <a href="dashboard.php"><button>Dashboard</button></a>
+                <a href="threads.php"><button>Discussions</button></a>
             </nav>
         </div>
     </header>
@@ -111,6 +112,7 @@
         <a href="about.php"> About |</a>
         <a href="browse.php"> Browse |</a>
         <a href="dashboard.php"> Dashboard |</a>
+        <a href="threads.php"> Discussions |</a>
     </nav>
 </footer>
 </body>
