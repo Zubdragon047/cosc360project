@@ -110,6 +110,7 @@
         
         <div id="comments-container">
             <!-- Comments will be loaded here via AJAX -->
+            <div class="loading-comments">Loading comments...</div>
         </div>
     </div>
 
