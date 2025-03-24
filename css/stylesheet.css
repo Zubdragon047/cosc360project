@@ -90,9 +90,21 @@ h3 {
 
 .browse-container {
     display: flex;
-    justify-content: space-around;
     align-items: center;
-    img {width: 150px;} 
+    gap: 50px
+}
+
+.browse-bookentry {
+    width: 30%;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    gap: 20px;
+}
+
+.browse-bookpic {
+    width: 75px;
 }
 
 #login-form {
@@ -155,9 +167,29 @@ h3 {
     }
     #title-error-message {color: red;}
     #description-error-message {color: red;}
-    #category-error-message {color: red}
+    #category-error-message {color: red;}
     #book-title {width: 125ch;}
-    #book-description {width: 125ch; height: 10ch}
+    #book-description {width: 125ch; height: 10ch;}
+}
+
+#post-discussion-form {
+    margin-bottom: 50px;
+    justify-self: left;
+    width: max-content;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: rgb(124, 228, 249);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2em;
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #comment-error-message {color: red;}
+    #comment {width: 125ch; height: 10ch;}
 }
 
 #search-form {
@@ -178,6 +210,22 @@ h3 {
     #search-error-message {color: red;}
     #search {width: 75ch}
 }
+
+
+.mylisting {
+    border: 3px solid black;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 100px;
+}
+
+.mylisting-image {
+    width: 200px;
+}
+
 
 /* Breadcrumb Navigation Styles */
 .breadcrumb {
@@ -364,6 +412,7 @@ h3 {
     border: 1px solid #ccc;
     margin-right: 10px;
 }
+
 
 /* Book Grid Styles */
 .book-grid {
@@ -633,6 +682,7 @@ h3 {
     }
 }
 
+
 /* Add new comment styles to the end of the CSS file */
 
 /* Comment highlighting for new comments */
@@ -868,3 +918,4 @@ h3 {
 .create-thread button:hover {
     background-color: #2980b9;
 }
+
