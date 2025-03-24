@@ -76,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'profilepic' => $profilepic,
             'type' => 'user'
         ];
-        $sql = "insert into users values(:username,:password,:email,:firstname,:lastname,:profilepic,:type)";
+        $sql = "INSERT INTO users (username, password, email, firstname, lastname, profilepic, type) 
+                VALUES (:username, :password, :email, :firstname, :lastname, :profilepic, :type)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";
