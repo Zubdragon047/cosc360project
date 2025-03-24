@@ -91,7 +91,7 @@
                 
                 if ($stmt->rowCount() > 0) {
                     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        echo '<div class="thread-item">';
+                        echo '<div class="thread-item" data-thread-id="' . $row['thread_id'] . '">';
                         echo '<h3><a href="thread.php?id=' . $row['thread_id'] . '">' . htmlspecialchars($row['title']) . '</a></h3>';
                         echo '<p class="thread-meta">Started by: ' . htmlspecialchars($row['username']) . ' | ';
                         echo 'Date: ' . date('M j, Y g:i A', strtotime($row['created_at'])) . ' | ';
