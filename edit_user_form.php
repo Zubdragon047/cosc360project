@@ -84,11 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'firstname'=> $newfirstname,
             'lastname'=> $newlastname,
             'profilepic' => $profilepic,
-            'type' => 'user',
             'currentuser' => $oldusername
         ];
         $sql = "UPDATE users
-                SET username=:username, password=:password, email=:email, firstname=:firstname, lastname=:lastname, profilepic=:profilepic, type=:type
+                SET username=:username, password=:password, email=:email, firstname=:firstname, lastname=:lastname, profilepic=:profilepic
                 WHERE username=:currentuser";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
