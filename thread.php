@@ -62,14 +62,16 @@ include('includes/header.php');
             background-color: #f44336;
             color: white;
             border: none;
-            padding: 3px 8px;
+            padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: bold;
         }
         
         .admin-comment-action .delete-button:hover {
             background-color: #d32f2f;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         
         .comment-footer {
@@ -78,6 +80,8 @@ include('includes/header.php');
             display: flex;
             align-items: center;
             flex-wrap: wrap;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
         }
         
         .comment-footer a {
@@ -166,6 +170,19 @@ include('includes/header.php');
         
         .thread-actions a {
             margin-right: 15px;
+        }
+        
+        .report-link {
+            color: #777;
+            text-decoration: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .report-link:hover {
+            background-color: #f0f0f0;
+            color: #555;
         }
     </style>
     
