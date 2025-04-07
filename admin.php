@@ -183,10 +183,10 @@ include('includes/header.php');
         <p>Search across all content types (books, threads, comments).</p>
         
         <div class="search-container">
-            <form id="content-search-form">
+            <form id="content-search-form" onsubmit="return false;">
                 <div class="form-group">
                     <input type="text" id="content-search-input" name="search" placeholder="Search books, threads, and comments...">
-                    <button type="submit" class="submit">Search</button>
+                    <button type="button" class="submit" onclick="searchContent(document.getElementById('content-search-input').value);">Search</button>
                 </div>
             </form>
         </div>
@@ -209,16 +209,125 @@ include('includes/header.php');
         <h3 class="admin-section-heading">Reported Content</h3>
         <p>View and handle reported content here.</p>
         
+        <style>
+            .report-filters {
+                display: flex;
+                margin-bottom: 20px;
+                gap: 10px;
+            }
+            .report-filter {
+                padding: 8px 15px;
+                background-color: #f1f1f1;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+                text-decoration: none;
+                color: #333;
+                display: inline-block;
+            }
+            .report-filter.active {
+                background-color: #f44336;
+                color: white;
+                border-color: #d32f2f;
+            }
+            .report-filter:hover:not(.active) {
+                background-color: #ddd;
+            }
+            
+            /* Status colors */
+            .status-pending {
+                color: #ff9800;
+                font-weight: bold;
+            }
+            .status-resolved {
+                color: #4CAF50;
+                font-weight: bold;
+            }
+            .status-dismissed {
+                color: #9e9e9e;
+                font-weight: bold;
+            }
+        </style>
+        
         <div class="report-filters">
-            <button class="report-filter active" data-status="all">All Reports</button>
-            <button class="report-filter" data-status="pending">Pending</button>
-            <button class="report-filter" data-status="resolved">Resolved</button>
-            <button class="report-filter" data-status="dismissed">Dismissed</button>
+            <a href="javascript:void(0);" class="report-filter active" data-status="all">All Reports</a>
+            <a href="javascript:void(0);" class="report-filter" data-status="pending">Pending</a>
+            <a href="javascript:void(0);" class="report-filter" data-status="resolved">Resolved</a>
+            <a href="javascript:void(0);" class="report-filter" data-status="dismissed">Dismissed</a>
         </div>
         
         <div id="report-results">
             <div class="loading-indicator">Loading reports...</div>
+            
+            <?php
+            // Fallback display of reports if AJAX fails
+            try {
+                $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                
+                $sql = "SELECT * FROM reports ORDER BY created_at DESC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                
+                if ($stmt->rowCount() > 0) {
+                    echo '<div id="fallback-reports" style="display:none;">';
+                    echo '<h4>PHP Fallback Report Display</h4>';
+                    echo '<p><em>Note: This is a server-rendered fallback. AJAX loading failed.</em></p>';
+                    echo '<table class="report-table">';
+                    echo '<thead>';
+                    echo '<tr>';
+                    echo '<th>ID</th>';
+                    echo '<th>Content</th>';
+                    echo '<th>Reporter</th>';
+                    echo '<th>Reason</th>';
+                    echo '<th>Status</th>';
+                    echo '<th>Date</th>';
+                    echo '</tr>';
+                    echo '</thead>';
+                    echo '<tbody>';
+                    
+                    while ($report = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                        $contentTypeLabel = ucfirst($report['content_type']);
+                        $statusClass = 'status-' . $report['status'];
+                        $statusLabel = ucfirst($report['status']);
+                        
+                        echo '<tr>';
+                        echo '<td>' . $report['report_id'] . '</td>';
+                        echo '<td>' . htmlspecialchars($contentTypeLabel) . ' #' . $report['content_id'] . '</td>';
+                        echo '<td>' . htmlspecialchars($report['reporter_username']) . '</td>';
+                        echo '<td>' . htmlspecialchars($report['reason']) . '</td>';
+                        echo '<td class="' . $statusClass . '">' . $statusLabel . '</td>';
+                        echo '<td>' . date('M j, Y g:i A', strtotime($report['created_at'])) . '</td>';
+                        echo '</tr>';
+                    }
+                    
+                    echo '</tbody>';
+                    echo '</table>';
+                    echo '</div>';
+                    
+                    // Add JavaScript to show fallback after a timeout
+                    echo '<script>
+                        setTimeout(function() {
+                            var loadingElem = document.querySelector("#report-results .loading-indicator");
+                            var fallbackElem = document.getElementById("fallback-reports");
+                            
+                            if (loadingElem && fallbackElem && loadingElem.parentNode === document.getElementById("report-results")) {
+                                fallbackElem.style.display = "block";
+                                console.log("Showing fallback reports display");
+                            }
+                        }, 5000); // Show fallback after 5 seconds if AJAX hasn't completed
+                    </script>';
+                }
+            } catch (PDOException $e) {
+                // Silently fail - we're just a fallback
+            }
+            ?>
         </div>
+        
+        <p style="margin-top: 20px; font-size: 0.9em;">
+            <a href="test_reports.php" target="_blank" style="color: #666;">Troubleshoot Reports</a>
+        </p>
         
         <!-- Report details modal -->
         <div id="report-details-modal" class="modal">

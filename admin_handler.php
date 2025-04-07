@@ -70,110 +70,102 @@ try {
             break;
             
         case 'search_content':
-            $searchTerm = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
+            $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
             
-            if (empty($searchTerm) || $searchTerm === '%%') {
-                echo json_encode(['success' => false, 'message' => 'Please enter a search term']);
+            if (empty($searchTerm)) {
+                echo json_encode(['success' => false, 'message' => 'No search term provided']);
                 exit;
             }
             
-            // Search books
-            $sqlBooks = "SELECT b.*, u.username, 'book' AS content_type
-                      FROM books b
-                      JOIN users u ON b.username = u.username
-                      WHERE b.title LIKE :search 
-                      OR b.description LIKE :search
-                      OR b.category LIKE :search
-                      LIMIT 20";
-            $stmtBooks = $pdo->prepare($sqlBooks);
-            $stmtBooks->bindParam(':search', $searchTerm, PDO::PARAM_STR);
-            $stmtBooks->execute();
-            $books = $stmtBooks->fetchAll(PDO::FETCH_ASSOC);
+            $wildcard = '%' . $searchTerm . '%';
+            $results = [
+                'books' => [],
+                'threads' => [],
+                'comments' => []
+            ];
             
-            // Search threads
-            $sqlThreads = "SELECT t.*, u.username, 'thread' AS content_type
-                         FROM threads t
-                         JOIN users u ON t.username = u.username
-                         WHERE t.title LIKE :search 
-                         OR t.content LIKE :search
-                         LIMIT 20";
-            $stmtThreads = $pdo->prepare($sqlThreads);
-            $stmtThreads->bindParam(':search', $searchTerm, PDO::PARAM_STR);
-            $stmtThreads->execute();
-            $threads = $stmtThreads->fetchAll(PDO::FETCH_ASSOC);
+            // Search for books
+            $sql = "SELECT b.*, u.username 
+                    FROM books b
+                    JOIN users u ON b.username = u.username
+                    WHERE b.title LIKE :search 
+                    OR b.description LIKE :search
+                    LIMIT 50";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':search', $wildcard, PDO::PARAM_STR);
+            $stmt->execute();
             
-            // Search comments
-            $sqlComments = "SELECT c.*, t.thread_id, t.title AS thread_title, u.username, 'comment' AS content_type
-                          FROM comments c
-                          JOIN threads t ON c.thread_id = t.thread_id
-                          JOIN users u ON c.username = u.username
-                          WHERE c.content LIKE :search
-                          LIMIT 20";
-            $stmtComments = $pdo->prepare($sqlComments);
-            $stmtComments->bindParam(':search', $searchTerm, PDO::PARAM_STR);
-            $stmtComments->execute();
-            $comments = $stmtComments->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Process the results
-            $processedBooks = [];
+            $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($books as $book) {
-                $processedBooks[] = [
-                    'id' => $book['book_id'],
+                $results['books'][] = [
+                    'book_id' => $book['book_id'],
                     'title' => $book['title'],
-                    'content' => substr(strip_tags($book['description']), 0, 100) . '...',
-                    'author' => $book['username'],
-                    'type' => 'book',
-                    'date' => $book['created_at'],
-                    'url' => 'book_detail.php?id=' . $book['book_id'],
+                    'description' => $book['description'],
+                    'username' => $book['username'],
+                    'created_at' => $book['created_at'],
                     'html' => generateContentSearchRow($book, 'book')
                 ];
             }
             
-            $processedThreads = [];
+            // Search for threads
+            $sql = "SELECT t.*, u.username 
+                    FROM threads t
+                    JOIN users u ON t.username = u.username
+                    WHERE t.title LIKE :search 
+                    OR t.content LIKE :search
+                    LIMIT 50";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':search', $wildcard, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $threads = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($threads as $thread) {
-                $processedThreads[] = [
-                    'id' => $thread['thread_id'],
+                $results['threads'][] = [
+                    'thread_id' => $thread['thread_id'],
                     'title' => $thread['title'],
-                    'content' => substr(strip_tags($thread['content']), 0, 100) . '...',
-                    'author' => $thread['username'],
-                    'type' => 'thread',
-                    'date' => $thread['created_at'],
-                    'url' => 'thread.php?id=' . $thread['thread_id'],
+                    'content' => $thread['content'],
+                    'username' => $thread['username'],
+                    'created_at' => $thread['created_at'],
                     'html' => generateContentSearchRow($thread, 'thread')
                 ];
             }
             
-            $processedComments = [];
+            // Search for comments
+            $sql = "SELECT c.*, u.username, t.title as thread_title, t.thread_id
+                    FROM comments c
+                    JOIN users u ON c.username = u.username
+                    JOIN threads t ON c.thread_id = t.thread_id
+                    WHERE c.content LIKE :search
+                    LIMIT 50";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':search', $wildcard, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($comments as $comment) {
-                $processedComments[] = [
-                    'id' => $comment['comment_id'],
-                    'title' => 'Comment on: ' . $comment['thread_title'],
-                    'content' => substr(strip_tags($comment['content']), 0, 100) . '...',
-                    'author' => $comment['username'],
-                    'type' => 'comment',
-                    'date' => $comment['created_at'],
-                    'url' => 'thread.php?id=' . $comment['thread_id'] . '#comment-' . $comment['comment_id'],
+                $results['comments'][] = [
+                    'comment_id' => $comment['comment_id'],
+                    'thread_id' => $comment['thread_id'],
+                    'thread_title' => $comment['thread_title'],
+                    'content' => $comment['content'],
+                    'username' => $comment['username'],
+                    'created_at' => $comment['created_at'],
                     'html' => generateContentSearchRow($comment, 'comment')
                 ];
             }
             
-            // Combine all results
-            $allResults = array_merge($processedBooks, $processedThreads, $processedComments);
-            
-            // Sort by date (newest first)
-            usort($allResults, function($a, $b) {
-                return strtotime($b['date']) - strtotime($a['date']);
-            });
+            // Prepare summary data
+            $summary = [
+                'total' => count($results['books']) + count($results['threads']) + count($results['comments']),
+                'books' => count($results['books']),
+                'threads' => count($results['threads']),
+                'comments' => count($results['comments'])
+            ];
             
             echo json_encode([
                 'success' => true, 
-                'results' => $allResults,
-                'count' => [
-                    'total' => count($allResults),
-                    'books' => count($processedBooks),
-                    'threads' => count($processedThreads),
-                    'comments' => count($processedComments)
-                ]
+                'results' => $results,
+                'summary' => $summary
             ]);
             break;
             
@@ -276,44 +268,64 @@ try {
             // Get status filter if provided
             $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
             
-            // Prepare query based on status filter
-            if ($statusFilter === 'all') {
-                $sql = "SELECT r.*, u.username as reporter_name
-                        FROM reports r
-                        JOIN users u ON r.reporter_username = u.username
-                        ORDER BY r.created_at DESC";
-                $stmt = $pdo->prepare($sql);
+            // Log for debugging
+            error_log("Loading reports with status: " . $statusFilter);
+            
+            try {
+                // Prepare query based on status filter
+                if ($statusFilter === 'all') {
+                    $sql = "SELECT r.*, u.username as reporter_name
+                            FROM reports r
+                            JOIN users u ON r.reporter_username = u.username
+                            ORDER BY r.created_at DESC";
+                    $stmt = $pdo->prepare($sql);
+                } else {
+                    $sql = "SELECT r.*, u.username as reporter_name
+                            FROM reports r
+                            JOIN users u ON r.reporter_username = u.username
+                            WHERE r.status = :status
+                            ORDER BY r.created_at DESC";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->bindParam(':status', $statusFilter, PDO::PARAM_STR);
+                }
+                
+                // Execute the query
                 $stmt->execute();
-            } else {
-                $sql = "SELECT r.*, u.username as reporter_name
-                        FROM reports r
-                        JOIN users u ON r.reporter_username = u.username
-                        WHERE r.status = :status
-                        ORDER BY r.created_at DESC";
-                $stmt = $pdo->prepare($sql);
-                $stmt->bindParam(':status', $statusFilter);
-                $stmt->execute();
+                $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                error_log("Found " . count($reports) . " reports");
+                
+                // For debugging, print out report details
+                foreach ($reports as $report) {
+                    error_log("Report #" . $report['report_id'] . ": " . $report['content_type'] . " reported by " . $report['reporter_username']);
+                }
+                
+                // Process reports for display
+                $processedReports = [];
+                foreach ($reports as $report) {
+                    // Make sure we're getting all report data
+                    if (!isset($report['report_id']) || !isset($report['content_type']) || !isset($report['reporter_username'])) {
+                        error_log("Incomplete report data: " . print_r($report, true));
+                        continue;
+                    }
+                    
+                    $processedReports[] = [
+                        'report_id' => $report['report_id'],
+                        'content_type' => $report['content_type'],
+                        'content_id' => $report['content_id'],
+                        'reporter_username' => $report['reporter_username'],
+                        'reason' => $report['reason'],
+                        'details' => $report['details'],
+                        'status' => $report['status'],
+                        'created_at' => $report['created_at'],
+                        'html' => generateReportRow($report)
+                    ];
+                }
+                
+                echo json_encode(['success' => true, 'reports' => $processedReports]);
+            } catch (PDOException $e) {
+                error_log("Database error in get_reports: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
             }
-            
-            $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Process reports for display
-            $processedReports = [];
-            foreach ($reports as $report) {
-                $processedReports[] = [
-                    'report_id' => $report['report_id'],
-                    'content_type' => $report['content_type'],
-                    'content_id' => $report['content_id'],
-                    'reporter' => $report['reporter_username'],
-                    'reason' => $report['reason'],
-                    'details' => $report['details'],
-                    'status' => $report['status'],
-                    'created_at' => $report['created_at'],
-                    'html' => generateReportRow($report)
-                ];
-            }
-            
-            echo json_encode(['success' => true, 'reports' => $processedReports]);
             break;
             
         case 'get_report_details':
@@ -446,32 +458,44 @@ function generateThreadRow($thread) {
 
 // Function to generate HTML for a report row
 function generateReportRow($report) {
+    if (!isset($report['content_type']) || !isset($report['report_id'])) {
+        error_log("Invalid report data in generateReportRow: " . print_r($report, true));
+        return '<tr><td colspan="6">Invalid report data</td></tr>';
+    }
+    
     $contentTypeLabel = ucfirst($report['content_type']);
     $statusClass = 'status-' . $report['status'];
     $statusLabel = ucfirst($report['status']);
+    $reportId = $report['report_id'];
     
-    $html = '<tr>';
-    $html .= '<td>' . htmlspecialchars($contentTypeLabel) . ' #' . $report['content_id'] . '</td>';
-    $html .= '<td>' . htmlspecialchars($report['reporter_username']) . '</td>';
-    $html .= '<td>' . htmlspecialchars($report['reason']) . '</td>';
+    // Ensure all necessary fields exist
+    $contentId = isset($report['content_id']) ? $report['content_id'] : 'Unknown';
+    $reporter = isset($report['reporter_username']) ? $report['reporter_username'] : 'Unknown';
+    $reason = isset($report['reason']) ? $report['reason'] : 'Not specified';
+    $created = isset($report['created_at']) ? $report['created_at'] : date('Y-m-d H:i:s');
+    
+    $html = '<tr data-report-id="' . $reportId . '">';
+    $html .= '<td>' . htmlspecialchars($contentTypeLabel) . ' #' . $contentId . '</td>';
+    $html .= '<td>' . htmlspecialchars($reporter) . '</td>';
+    $html .= '<td>' . htmlspecialchars($reason) . '</td>';
     $html .= '<td class="' . $statusClass . '">' . $statusLabel . '</td>';
-    $html .= '<td>' . date('M j, Y g:i A', strtotime($report['created_at'])) . '</td>';
+    $html .= '<td>' . date('M j, Y g:i A', strtotime($created)) . '</td>';
     $html .= '<td class="actions-column">';
     
     // View button
-    $html .= '<button class="view-report-button" data-report-id="' . $report['report_id'] . '">View Details</button>';
+    $html .= '<button class="view-report-button" data-report-id="' . $reportId . '">View Details</button>';
     
     // Status update buttons based on current status
-    if ($report['status'] === 'pending') {
+    if (isset($report['status']) && $report['status'] === 'pending') {
         $html .= '<form action="admin_actions.php" method="post" class="inline-form">';
         $html .= '<input type="hidden" name="action" value="resolve_report">';
-        $html .= '<input type="hidden" name="report_id" value="' . $report['report_id'] . '">';
+        $html .= '<input type="hidden" name="report_id" value="' . $reportId . '">';
         $html .= '<button type="submit" class="resolve-button">Resolve</button>';
         $html .= '</form>';
         
         $html .= '<form action="admin_actions.php" method="post" class="inline-form">';
         $html .= '<input type="hidden" name="action" value="dismiss_report">';
-        $html .= '<input type="hidden" name="report_id" value="' . $report['report_id'] . '">';
+        $html .= '<input type="hidden" name="report_id" value="' . $reportId . '">';
         $html .= '<button type="submit" class="dismiss-button">Dismiss</button>';
         $html .= '</form>';
     }

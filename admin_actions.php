@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Get action and required parameters
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $username = isset($_POST['username']) ? $_POST['username'] : '';
-$returnToDetail = isset($_POST['from_user_detail']) && isset($_POST['username']);
+$returnToDetail = isset($_POST['return_to_detail']) && $_POST['return_to_detail'] === '1';
 
 // Connect to database
 try {
@@ -38,14 +38,20 @@ try {
                 redirectBack();
             }
             
-            // Check if user exists
-            $sql = "SELECT * FROM users WHERE username = :username";
+            // Check if user exists and is not already an admin
+            $sql = "SELECT type FROM users WHERE username = :username";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
             $stmt->execute();
             
-            if ($stmt->rowCount() == 0) {
+            if ($stmt->rowCount() === 0) {
                 $_SESSION['error_message'] = "User not found.";
+                redirectBack();
+            }
+            
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row['type'] === 'admin') {
+                $_SESSION['error_message'] = "User is already an admin.";
                 redirectBack();
             }
             
@@ -70,14 +76,20 @@ try {
                 redirectBack();
             }
             
-            // Check if user exists
-            $sql = "SELECT * FROM users WHERE username = :username";
+            // Check if user exists and is an admin
+            $sql = "SELECT type FROM users WHERE username = :username";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
             $stmt->execute();
             
-            if ($stmt->rowCount() == 0) {
+            if ($stmt->rowCount() === 0) {
                 $_SESSION['error_message'] = "User not found.";
+                redirectBack();
+            }
+            
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row['type'] !== 'admin') {
+                $_SESSION['error_message'] = "User is not an admin.";
                 redirectBack();
             }
             
@@ -103,12 +115,12 @@ try {
             }
             
             // Check if user exists
-            $sql = "SELECT * FROM users WHERE username = :username";
+            $sql = "SELECT username FROM users WHERE username = :username";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':username', $username, PDO::PARAM_STR);
             $stmt->execute();
             
-            if ($stmt->rowCount() == 0) {
+            if ($stmt->rowCount() === 0) {
                 $_SESSION['error_message'] = "User not found.";
                 redirectBack();
             }
@@ -117,7 +129,37 @@ try {
             $pdo->beginTransaction();
             
             try {
-                // Delete user from database (foreign keys will automatically delete related content)
+                // Delete user's books
+                $sql = "DELETE FROM books WHERE username = :username";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // Delete user's comments
+                $sql = "DELETE FROM comments WHERE username = :username";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // Delete user's threads
+                $sql = "DELETE FROM threads WHERE username = :username";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // Delete user's book requests
+                $sql = "DELETE FROM book_requests WHERE requester_username = :username OR book_owner = :username";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // Delete user's reports
+                $sql = "DELETE FROM reports WHERE reporter_username = :username";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                // Finally, delete the user
                 $sql = "DELETE FROM users WHERE username = :username";
                 $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':username', $username, PDO::PARAM_STR);
@@ -270,6 +312,64 @@ try {
                 redirectBack();
             }
             
+        case 'resolve_report':
+            $reportId = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
+            
+            // Validate input
+            if (empty($reportId)) {
+                $_SESSION['error_message'] = 'Report ID is required';
+                redirectBack();
+            }
+            
+            // Check if report exists
+            $sql = "SELECT report_id FROM reports WHERE report_id = :report_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':report_id', $reportId);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                $_SESSION['error_message'] = 'Report not found';
+                redirectBack();
+            }
+            
+            // Update report status
+            $sql = "UPDATE reports SET status = 'resolved' WHERE report_id = :report_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':report_id', $reportId);
+            $stmt->execute();
+            
+            $_SESSION['success_message'] = 'Report marked as resolved';
+            redirectBack();
+            
+        case 'dismiss_report':
+            $reportId = isset($_POST['report_id']) ? (int)$_POST['report_id'] : 0;
+            
+            // Validate input
+            if (empty($reportId)) {
+                $_SESSION['error_message'] = 'Report ID is required';
+                redirectBack();
+            }
+            
+            // Check if report exists
+            $sql = "SELECT report_id FROM reports WHERE report_id = :report_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':report_id', $reportId);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                $_SESSION['error_message'] = 'Report not found';
+                redirectBack();
+            }
+            
+            // Update report status
+            $sql = "UPDATE reports SET status = 'dismissed' WHERE report_id = :report_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':report_id', $reportId);
+            $stmt->execute();
+            
+            $_SESSION['success_message'] = 'Report dismissed';
+            redirectBack();
+            
         default:
             $_SESSION['error_message'] = "Invalid action.";
             redirectBack();
@@ -284,12 +384,12 @@ try {
  * Helper function to redirect back to appropriate page
  */
 function redirectBack() {
-    global $returnToDetail, $username;
+    global $returnToDetail;
     
     if ($returnToDetail) {
-        header("Location: user_detail.php?username=" . urlencode($username));
+        header("Location: " . $_SERVER['HTTP_REFERER']);
     } else {
-        header("Location: admin.php");
+        header("Location: admin.php#reports");
     }
     exit;
 }
