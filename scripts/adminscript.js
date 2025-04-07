@@ -1,62 +1,109 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab navigation
+    console.log('Document loaded, initializing admin page');
+    
+    // Tab navigation setup
     const tabLinks = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
     
     tabLinks.forEach(link => {
         link.addEventListener('click', function() {
             const tabId = this.getAttribute('data-tab');
+            console.log('Tab clicked:', tabId);
             
-            // Hide all tab contents
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-            });
+            // Remove active class from all tabs
+            tabLinks.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
             
-            // Remove active class from all tab links
-            tabLinks.forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            // Add active class to current tab and content
+            // Add active class to current tab
             this.classList.add('active');
             document.getElementById(tabId).classList.add('active');
             
-            // Load content for specific tabs if needed
+            // Execute specific actions for certain tabs
             if (tabId === 'reports') {
-                console.log('Tab clicked: Loading reports');
-                setTimeout(() => loadReports('all'), 100);
+                setTimeout(() => {
+                    console.log('Loading reports for Reports tab');
+                    loadReports('all');
+                }, 100);
+            } else if (tabId === 'content-search') {
+                setTimeout(() => {
+                    console.log('Loading content overview for Content tab');
+                    searchContent('');
+                }, 100);
+            } else if (tabId === 'users') {
+                // If we're on the Users tab and there's no content yet, load all users
+                const userResults = document.getElementById('user-results');
+                if (userResults && userResults.querySelector('.user-table') === null) {
+                    setTimeout(() => {
+                        console.log('Loading all users for User Management tab');
+                        searchUsers('');
+                    }, 100);
+                }
+            } else if (tabId === 'books') {
+                // If we're on the Books tab and there's no content yet, load empty search
+                const bookResults = document.getElementById('book-results');
+                if (bookResults && bookResults.querySelector('p')?.textContent === 'Enter a search term to find books or leave empty to view all books.') {
+                    setTimeout(() => {
+                        console.log('Loading all books for Book Management tab');
+                        searchBooks('');
+                    }, 100);
+                }
+            } else if (tabId === 'threads') {
+                // If we're on the Threads tab and there's no content yet, load empty search
+                const threadResults = document.getElementById('thread-admin-results');
+                if (threadResults && threadResults.querySelector('p')?.textContent === 'Enter a search term to find discussion threads or leave empty to view all threads.') {
+                    setTimeout(() => {
+                        console.log('Loading all threads for Discussion Management tab');
+                        searchThreads('');
+                    }, 100);
+                }
             }
+            
+            // Update URL hash
+            window.location.hash = tabId;
         });
     });
     
+    // Initialize search forms
     // User search
     const userSearchForm = document.getElementById('user-search-form');
     if (userSearchForm) {
+        console.log('User search form found, adding event listener');
         userSearchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const searchTerm = document.getElementById('user-search').value;
+            console.log('User search submitted with term:', searchTerm);
             searchUsers(searchTerm);
         });
+    } else {
+        console.log('User search form not found');
     }
     
     // Book search
     const bookSearchForm = document.getElementById('book-search-form');
     if (bookSearchForm) {
+        console.log('Book search form found, adding event listener');
         bookSearchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const searchTerm = document.getElementById('book-search').value;
+            console.log('Book search submitted with term:', searchTerm);
             searchBooks(searchTerm);
         });
+    } else {
+        console.log('Book search form not found');
     }
     
     // Thread search
     const threadSearchForm = document.getElementById('thread-admin-search-form');
     if (threadSearchForm) {
+        console.log('Thread search form found, adding event listener');
         threadSearchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const searchTerm = document.getElementById('thread-admin-search').value;
+            console.log('Thread search submitted with term:', searchTerm);
             searchThreads(searchTerm);
         });
+    } else {
+        console.log('Thread search form not found');
     }
     
     // Content search
@@ -162,6 +209,54 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => loadReports('all'), 500);
         }
     });
+    
+    // Process URL hash on page load
+    if (window.location.hash) {
+        console.log('URL hash detected:', window.location.hash);
+        const tabId = window.location.hash.substring(1);
+        const tabLink = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+        
+        if (tabLink) {
+            console.log('Tab link found for hash, clicking it to activate tab');
+            // Use setTimeout to ensure DOM is fully ready
+            setTimeout(() => {
+                tabLink.click();
+            }, 100);
+        } else {
+            console.log('No tab link found for hash, defaulting to first tab');
+            // Default to first tab
+            tabLinks[0]?.click();
+        }
+    } else {
+        console.log('No URL hash, defaulting to first tab');
+        // Default to first tab if no hash
+        tabLinks[0]?.click();
+    }
+    
+    // Handle URL param for status filter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('status')) {
+        const status = urlParams.get('status');
+        console.log('Status param found in URL:', status);
+        
+        // If we're on the reports tab and there's a status parameter, load with that filter
+        if (window.location.hash === '#reports' || document.querySelector('#reports.tab-content.active')) {
+            setTimeout(() => {
+                console.log('Loading reports with status filter from URL param');
+                loadReports(status);
+                
+                // Update active class on filter buttons
+                const filterElements = document.querySelectorAll('.report-filter');
+                filterElements.forEach(filter => {
+                    if (filter.getAttribute('data-status') === status) {
+                        filter.classList.add('active');
+                    } else {
+                        filter.classList.remove('active');
+                    }
+                });
+            }, 200);
+        }
+    }
 });
 
 // Function to search users
@@ -174,19 +269,22 @@ function searchUsers(searchTerm) {
         return;
     }
     
+    // Show loading indicator
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching users...</div>';
     
     // Create an AJAX request using XMLHttpRequest
     const xhr = new XMLHttpRequest();
     const timestamp = new Date().getTime();
     const url = `admin_handler.php?action=search_users&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    console.log('Fetching users from:', url);
     
     xhr.open('GET', url, true);
     
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             try {
                 const data = JSON.parse(xhr.responseText);
+                console.log('Parsed user search data:', data);
                 
                 if (data.success) {
                     if (data.users && data.users.length > 0) {
@@ -219,24 +317,49 @@ function searchUsers(searchTerm) {
                         resultsContainer.innerHTML = '<p>No users found matching your search.</p>';
                     }
                 } else {
-                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    resultsContainer.innerHTML = `
+                        <div class="error-message">
+                            Error: ${data.message || 'Unknown error'}
+                            <button class="retry-button" onclick="searchUsers('${encodeURIComponent(searchTerm)}')">Retry</button>
+                        </div>`;
                     console.error('API returned error:', data.message);
                 }
             } catch (error) {
                 console.error('Error parsing JSON response:', error);
-                console.error('Raw response:', xhr.responseText);
-                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
+                console.error('Raw response:', xhr.responseText.substring(0, 500));
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        Error parsing server response: ${error.message}
+                        <button class="retry-button" onclick="searchUsers('${encodeURIComponent(searchTerm)}')">Retry</button>
+                    </div>`;
             }
         } else {
             console.error('HTTP Error:', xhr.status, xhr.statusText);
-            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+            resultsContainer.innerHTML = `
+                <div class="error-message">
+                    HTTP Error ${xhr.status}: ${xhr.statusText}
+                    <button class="retry-button" onclick="searchUsers('${encodeURIComponent(searchTerm)}')">Retry</button>
+                </div>`;
         }
     };
     
     xhr.onerror = function() {
-        console.error('Network error occurred');
-        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
-        resultsContainer.innerHTML += `<p><button onclick="searchUsers('${searchTerm}')" class="retry-button">Retry</button></p>`;
+        console.error('Network error occurred during user search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Network error occurred. Please check your connection and try again.
+                <button class="retry-button" onclick="searchUsers('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
+    };
+    
+    xhr.timeout = 10000; // 10 second timeout
+    xhr.ontimeout = function() {
+        console.error('Request timed out during user search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Request timed out. Server might be busy.
+                <button class="retry-button" onclick="searchUsers('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
     };
     
     xhr.send();
@@ -252,19 +375,22 @@ function searchBooks(searchTerm) {
         return;
     }
     
+    // Show loading indicator
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching books...</div>';
     
     // Create an AJAX request using XMLHttpRequest
     const xhr = new XMLHttpRequest();
     const timestamp = new Date().getTime();
     const url = `admin_handler.php?action=search_books&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    console.log('Fetching books from:', url);
     
     xhr.open('GET', url, true);
     
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             try {
                 const data = JSON.parse(xhr.responseText);
+                console.log('Parsed book search data:', data);
                 
                 if (data.success) {
                     if (data.books && data.books.length > 0) {
@@ -295,24 +421,49 @@ function searchBooks(searchTerm) {
                         resultsContainer.innerHTML = '<p>No books found matching your search.</p>';
                     }
                 } else {
-                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    resultsContainer.innerHTML = `
+                        <div class="error-message">
+                            Error: ${data.message || 'Unknown error'}
+                            <button class="retry-button" onclick="searchBooks('${encodeURIComponent(searchTerm)}')">Retry</button>
+                        </div>`;
                     console.error('API returned error:', data.message);
                 }
             } catch (error) {
                 console.error('Error parsing JSON response:', error);
-                console.error('Raw response:', xhr.responseText);
-                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
+                console.error('Raw response:', xhr.responseText.substring(0, 500));
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        Error parsing server response: ${error.message}
+                        <button class="retry-button" onclick="searchBooks('${encodeURIComponent(searchTerm)}')">Retry</button>
+                    </div>`;
             }
         } else {
             console.error('HTTP Error:', xhr.status, xhr.statusText);
-            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+            resultsContainer.innerHTML = `
+                <div class="error-message">
+                    HTTP Error ${xhr.status}: ${xhr.statusText}
+                    <button class="retry-button" onclick="searchBooks('${encodeURIComponent(searchTerm)}')">Retry</button>
+                </div>`;
         }
     };
     
     xhr.onerror = function() {
-        console.error('Network error occurred');
-        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
-        resultsContainer.innerHTML += `<p><button onclick="searchBooks('${searchTerm}')" class="retry-button">Retry</button></p>`;
+        console.error('Network error occurred during book search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Network error occurred. Please check your connection and try again.
+                <button class="retry-button" onclick="searchBooks('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
+    };
+    
+    xhr.timeout = 10000; // 10 second timeout
+    xhr.ontimeout = function() {
+        console.error('Request timed out during book search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Request timed out. Server might be busy.
+                <button class="retry-button" onclick="searchBooks('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
     };
     
     xhr.send();
@@ -328,19 +479,22 @@ function searchThreads(searchTerm) {
         return;
     }
     
+    // Show loading indicator
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching threads...</div>';
     
     // Create an AJAX request using XMLHttpRequest
     const xhr = new XMLHttpRequest();
     const timestamp = new Date().getTime();
     const url = `admin_handler.php?action=search_threads&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    console.log('Fetching threads from:', url);
     
     xhr.open('GET', url, true);
     
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             try {
                 const data = JSON.parse(xhr.responseText);
+                console.log('Parsed thread search data:', data);
                 
                 if (data.success) {
                     if (data.threads && data.threads.length > 0) {
@@ -350,7 +504,7 @@ function searchThreads(searchTerm) {
                         html += '<tr>';
                         html += '<th>Title</th>';
                         html += '<th>Author</th>';
-                        html += '<th>Created</th>';
+                        html += '<th>Date</th>';
                         html += '<th>Comments</th>';
                         html += '<th>Actions</th>';
                         html += '</tr>';
@@ -370,24 +524,49 @@ function searchThreads(searchTerm) {
                         resultsContainer.innerHTML = '<p>No threads found matching your search.</p>';
                     }
                 } else {
-                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    resultsContainer.innerHTML = `
+                        <div class="error-message">
+                            Error: ${data.message || 'Unknown error'}
+                            <button class="retry-button" onclick="searchThreads('${encodeURIComponent(searchTerm)}')">Retry</button>
+                        </div>`;
                     console.error('API returned error:', data.message);
                 }
             } catch (error) {
                 console.error('Error parsing JSON response:', error);
-                console.error('Raw response:', xhr.responseText);
-                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
+                console.error('Raw response:', xhr.responseText.substring(0, 500));
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        Error parsing server response: ${error.message}
+                        <button class="retry-button" onclick="searchThreads('${encodeURIComponent(searchTerm)}')">Retry</button>
+                    </div>`;
             }
         } else {
             console.error('HTTP Error:', xhr.status, xhr.statusText);
-            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+            resultsContainer.innerHTML = `
+                <div class="error-message">
+                    HTTP Error ${xhr.status}: ${xhr.statusText}
+                    <button class="retry-button" onclick="searchThreads('${encodeURIComponent(searchTerm)}')">Retry</button>
+                </div>`;
         }
     };
     
     xhr.onerror = function() {
-        console.error('Network error occurred');
-        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
-        resultsContainer.innerHTML += `<p><button onclick="searchThreads('${searchTerm}')" class="retry-button">Retry</button></p>`;
+        console.error('Network error occurred during thread search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Network error occurred. Please check your connection and try again.
+                <button class="retry-button" onclick="searchThreads('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
+    };
+    
+    xhr.timeout = 10000; // 10 second timeout
+    xhr.ontimeout = function() {
+        console.error('Request timed out during thread search');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                Request timed out. Server might be busy.
+                <button class="retry-button" onclick="searchThreads('${encodeURIComponent(searchTerm)}')">Retry</button>
+            </div>`;
     };
     
     xhr.send();
