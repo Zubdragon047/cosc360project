@@ -13,6 +13,7 @@ include('includes/header.php');
 
 <div class="main-container">
     <h2>Dashboard</h2>
+
     <?php if (!isset($_SESSION['username'])): ?>
         <h3 style="color:red">Must be logged in to use dashboard.</h3>
     <?php else: ?>
@@ -263,6 +264,7 @@ include('includes/header.php');
             }
             ?>
         </div>
+
     <?php endif; ?>
 </div>
 
