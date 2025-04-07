@@ -69,6 +69,114 @@ try {
             echo json_encode(['success' => true, 'users' => $processedUsers]);
             break;
             
+        case 'search_content':
+            $searchTerm = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
+            
+            if (empty($searchTerm) || $searchTerm === '%%') {
+                echo json_encode(['success' => false, 'message' => 'Please enter a search term']);
+                exit;
+            }
+            
+            // Search books
+            $sqlBooks = "SELECT b.*, u.username, 'book' AS content_type
+                      FROM books b
+                      JOIN users u ON b.username = u.username
+                      WHERE b.title LIKE :search 
+                      OR b.description LIKE :search
+                      OR b.category LIKE :search
+                      LIMIT 20";
+            $stmtBooks = $pdo->prepare($sqlBooks);
+            $stmtBooks->bindParam(':search', $searchTerm, PDO::PARAM_STR);
+            $stmtBooks->execute();
+            $books = $stmtBooks->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Search threads
+            $sqlThreads = "SELECT t.*, u.username, 'thread' AS content_type
+                         FROM threads t
+                         JOIN users u ON t.username = u.username
+                         WHERE t.title LIKE :search 
+                         OR t.content LIKE :search
+                         LIMIT 20";
+            $stmtThreads = $pdo->prepare($sqlThreads);
+            $stmtThreads->bindParam(':search', $searchTerm, PDO::PARAM_STR);
+            $stmtThreads->execute();
+            $threads = $stmtThreads->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Search comments
+            $sqlComments = "SELECT c.*, t.thread_id, t.title AS thread_title, u.username, 'comment' AS content_type
+                          FROM comments c
+                          JOIN threads t ON c.thread_id = t.thread_id
+                          JOIN users u ON c.username = u.username
+                          WHERE c.content LIKE :search
+                          LIMIT 20";
+            $stmtComments = $pdo->prepare($sqlComments);
+            $stmtComments->bindParam(':search', $searchTerm, PDO::PARAM_STR);
+            $stmtComments->execute();
+            $comments = $stmtComments->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Process the results
+            $processedBooks = [];
+            foreach ($books as $book) {
+                $processedBooks[] = [
+                    'id' => $book['book_id'],
+                    'title' => $book['title'],
+                    'content' => substr(strip_tags($book['description']), 0, 100) . '...',
+                    'author' => $book['username'],
+                    'type' => 'book',
+                    'date' => $book['created_at'],
+                    'url' => 'book_detail.php?id=' . $book['book_id'],
+                    'html' => generateContentSearchRow($book, 'book')
+                ];
+            }
+            
+            $processedThreads = [];
+            foreach ($threads as $thread) {
+                $processedThreads[] = [
+                    'id' => $thread['thread_id'],
+                    'title' => $thread['title'],
+                    'content' => substr(strip_tags($thread['content']), 0, 100) . '...',
+                    'author' => $thread['username'],
+                    'type' => 'thread',
+                    'date' => $thread['created_at'],
+                    'url' => 'thread.php?id=' . $thread['thread_id'],
+                    'html' => generateContentSearchRow($thread, 'thread')
+                ];
+            }
+            
+            $processedComments = [];
+            foreach ($comments as $comment) {
+                $processedComments[] = [
+                    'id' => $comment['comment_id'],
+                    'title' => 'Comment on: ' . $comment['thread_title'],
+                    'content' => substr(strip_tags($comment['content']), 0, 100) . '...',
+                    'author' => $comment['username'],
+                    'type' => 'comment',
+                    'date' => $comment['created_at'],
+                    'url' => 'thread.php?id=' . $comment['thread_id'] . '#comment-' . $comment['comment_id'],
+                    'html' => generateContentSearchRow($comment, 'comment')
+                ];
+            }
+            
+            // Combine all results
+            $allResults = array_merge($processedBooks, $processedThreads, $processedComments);
+            
+            // Sort by date (newest first)
+            usort($allResults, function($a, $b) {
+                return strtotime($b['date']) - strtotime($a['date']);
+            });
+            
+            echo json_encode([
+                'success' => true, 
+                'results' => $allResults,
+                'count' => [
+                    'total' => count($allResults),
+                    'books' => count($processedBooks),
+                    'threads' => count($processedThreads),
+                    'comments' => count($processedComments)
+                ]
+            ]);
+            break;
+            
         case 'search_books':
             $searchTerm = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
             
@@ -206,6 +314,37 @@ try {
             }
             
             echo json_encode(['success' => true, 'reports' => $processedReports]);
+            break;
+            
+        case 'get_report_details':
+            $reportId = isset($_GET['report_id']) ? (int)$_GET['report_id'] : 0;
+            
+            if (!$reportId) {
+                echo json_encode(['success' => false, 'message' => 'Invalid report ID']);
+                exit;
+            }
+            
+            $sql = "SELECT r.*, u.username as reporter_name
+                    FROM reports r
+                    JOIN users u ON r.reporter_username = u.username
+                    WHERE r.report_id = :report_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':report_id', $reportId);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() === 0) {
+                echo json_encode(['success' => false, 'message' => 'Report not found']);
+                exit;
+            }
+            
+            $report = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // If it's a comment, get the thread ID for linking
+            if ($report['content_type'] === 'comment') {
+                $report['thread_id'] = getThreadIdForComment($report['content_id']);
+            }
+            
+            echo json_encode(['success' => true, 'report' => $report]);
             break;
             
         default:
@@ -373,5 +512,85 @@ function getThreadIdForComment($commentId) {
     } catch(PDOException $e) {
         return 0;
     }
+}
+
+// Function to generate HTML for a content search row
+function generateContentSearchRow($item, $type) {
+    $html = '<tr>';
+    
+    // Type column with icon
+    $html .= '<td class="content-type-column">';
+    if ($type === 'book') {
+        $html .= '<span class="content-type book">Book</span>';
+    } else if ($type === 'thread') {
+        $html .= '<span class="content-type thread">Thread</span>';
+    } else if ($type === 'comment') {
+        $html .= '<span class="content-type comment">Comment</span>';
+    }
+    $html .= '</td>';
+    
+    // Title column
+    $html .= '<td>';
+    if ($type === 'book') {
+        $html .= '<a href="book_detail.php?id=' . $item['book_id'] . '">' . htmlspecialchars($item['title']) . '</a>';
+    } else if ($type === 'thread') {
+        $html .= '<a href="thread.php?id=' . $item['thread_id'] . '">' . htmlspecialchars($item['title']) . '</a>';
+    } else if ($type === 'comment') {
+        $html .= '<a href="thread.php?id=' . $item['thread_id'] . '#comment-' . $item['comment_id'] . '">Comment on: ' . htmlspecialchars($item['thread_title']) . '</a>';
+    }
+    $html .= '</td>';
+    
+    // Content preview
+    $html .= '<td>';
+    if ($type === 'book') {
+        $html .= htmlspecialchars(substr(strip_tags($item['description']), 0, 100)) . '...';
+    } else if ($type === 'thread' || $type === 'comment') {
+        $html .= htmlspecialchars(substr(strip_tags($item['content']), 0, 100)) . '...';
+    }
+    $html .= '</td>';
+    
+    // Author
+    $html .= '<td>' . htmlspecialchars($item['username']) . '</td>';
+    
+    // Date
+    $html .= '<td>' . date('M j, Y g:i A', strtotime($item['created_at'])) . '</td>';
+    
+    // Actions
+    $html .= '<td class="actions-column">';
+    
+    // View button
+    if ($type === 'book') {
+        $html .= '<a href="book_detail.php?id=' . $item['book_id'] . '" class="view-button">View</a>';
+    } else if ($type === 'thread') {
+        $html .= '<a href="thread.php?id=' . $item['thread_id'] . '" class="view-button">View</a>';
+    } else if ($type === 'comment') {
+        $html .= '<a href="thread.php?id=' . $item['thread_id'] . '#comment-' . $item['comment_id'] . '" class="view-button">View</a>';
+    }
+    
+    // Delete button for each type
+    if ($type === 'book') {
+        $html .= '<form action="admin_actions.php" method="post" class="inline-form">';
+        $html .= '<input type="hidden" name="action" value="delete_book">';
+        $html .= '<input type="hidden" name="book_id" value="' . $item['book_id'] . '">';
+        $html .= '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this book? This action cannot be undone.\')">Delete</button>';
+        $html .= '</form>';
+    } else if ($type === 'thread') {
+        $html .= '<form action="admin_actions.php" method="post" class="inline-form">';
+        $html .= '<input type="hidden" name="action" value="delete_thread">';
+        $html .= '<input type="hidden" name="thread_id" value="' . $item['thread_id'] . '">';
+        $html .= '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this thread? All comments will also be deleted. This action cannot be undone.\')">Delete</button>';
+        $html .= '</form>';
+    } else if ($type === 'comment') {
+        $html .= '<form action="admin_actions.php" method="post" class="inline-form">';
+        $html .= '<input type="hidden" name="action" value="delete_comment">';
+        $html .= '<input type="hidden" name="comment_id" value="' . $item['comment_id'] . '">';
+        $html .= '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this comment? This action cannot be undone.\')">Delete</button>';
+        $html .= '</form>';
+    }
+    
+    $html .= '</td>';
+    $html .= '</tr>';
+    
+    return $html;
 }
 ?> 

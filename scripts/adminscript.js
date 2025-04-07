@@ -58,6 +58,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Content search
+    const contentSearchForm = document.getElementById('content-search-form');
+    if (contentSearchForm) {
+        contentSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('content-search-input').value;
+            searchContent(searchTerm);
+        });
+    }
+    
     // Report filters
     const reportFilters = document.querySelectorAll('.report-filter');
     if (reportFilters) {
@@ -232,6 +242,71 @@ function searchThreads(searchTerm) {
         })
         .catch(error => {
             resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+        });
+}
+
+// Function to search content across all content types
+function searchContent(searchTerm) {
+    const resultsContainer = document.getElementById('content-search-results');
+    const summaryContainer = document.getElementById('content-search-summary');
+    
+    if (!searchTerm.trim()) {
+        resultsContainer.innerHTML = '<p>Please enter a search term to find content.</p>';
+        summaryContainer.style.display = 'none';
+        return;
+    }
+    
+    resultsContainer.innerHTML = '<div class="loading-indicator">Searching content...</div>';
+    summaryContainer.style.display = 'none';
+    
+    fetch(`admin_handler.php?action=search_content&search=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.results.length > 0) {
+                    // Update summary
+                    document.getElementById('total-results').textContent = data.count.total;
+                    document.getElementById('book-results-count').textContent = data.count.books;
+                    document.getElementById('thread-results-count').textContent = data.count.threads;
+                    document.getElementById('comment-results-count').textContent = data.count.comments;
+                    summaryContainer.style.display = 'block';
+                    
+                    // Create results table
+                    let html = '<div class="content-search-table-container">';
+                    html += '<table class="content-search-table">';
+                    html += '<thead>';
+                    html += '<tr>';
+                    html += '<th>Type</th>';
+                    html += '<th>Title</th>';
+                    html += '<th>Content</th>';
+                    html += '<th>Author</th>';
+                    html += '<th>Date</th>';
+                    html += '<th>Actions</th>';
+                    html += '</tr>';
+                    html += '</thead>';
+                    html += '<tbody>';
+                    
+                    data.results.forEach(result => {
+                        html += result.html;
+                    });
+                    
+                    html += '</tbody>';
+                    html += '</table>';
+                    html += '</div>';
+                    
+                    resultsContainer.innerHTML = html;
+                } else {
+                    resultsContainer.innerHTML = '<p>No content found matching your search.</p>';
+                    summaryContainer.style.display = 'none';
+                }
+            } else {
+                resultsContainer.innerHTML = `<p>Error: ${data.message}</p>`;
+                summaryContainer.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
+            summaryContainer.style.display = 'none';
         });
 }
 

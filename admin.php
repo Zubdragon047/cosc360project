@@ -39,6 +39,7 @@ include('includes/header.php');
         <button class="tab-link" data-tab="books">Book Management</button>
         <button class="tab-link" data-tab="threads">Discussion Management</button>
         <button class="tab-link" data-tab="reports">Reported Content</button>
+        <button class="tab-link" data-tab="content-search">Content Search</button>
     </div>
     
     <div id="users" class="tab-content active">
@@ -174,6 +175,33 @@ include('includes/header.php');
         <div id="thread-admin-results">
             <!-- Thread search results will be displayed here -->
             <p>Enter a search term to find discussion threads or leave empty to view all threads.</p>
+        </div>
+    </div>
+    
+    <div id="content-search" class="tab-content">
+        <h3 class="admin-section-heading">Content Search</h3>
+        <p>Search across all content types (books, threads, comments).</p>
+        
+        <div class="search-container">
+            <form id="content-search-form">
+                <div class="form-group">
+                    <input type="text" id="content-search-input" name="search" placeholder="Search books, threads, and comments...">
+                    <button type="submit" class="submit">Search</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="content-search-summary" class="search-summary" style="display:none">
+            <p>Found <span id="total-results">0</span> results: 
+               <span id="book-results-count">0</span> books, 
+               <span id="thread-results-count">0</span> threads, 
+               <span id="comment-results-count">0</span> comments
+            </p>
+        </div>
+        
+        <div id="content-search-results">
+            <!-- Content search results will be displayed here -->
+            <p>Enter a search term to find content across the site.</p>
         </div>
     </div>
     
