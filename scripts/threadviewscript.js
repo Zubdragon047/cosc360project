@@ -135,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function appendComment(comment, isNew) {
         const commentElement = document.createElement("div");
         commentElement.className = "comment";
+        commentElement.id = "comment-" + comment.id;
         if (isNew) {
             commentElement.className += " new-comment";
         }
@@ -161,6 +162,17 @@ document.addEventListener("DOMContentLoaded", () => {
         // Add report link if user is logged in
         if (document.getElementById('reportModal')) {
             commentHTML += `<a href="#" class="report-link" data-type="comment" data-id="${comment.id}">Report</a>`;
+        }
+        
+        // Add delete button for admins
+        if (comment.is_admin_viewing) {
+            commentHTML += `
+                <form action="admin_actions.php" method="post" class="admin-comment-action">
+                    <input type="hidden" name="action" value="delete_comment">
+                    <input type="hidden" name="comment_id" value="${comment.id}">
+                    <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this comment?')">Delete Comment</button>
+                </form>
+            `;
         }
         
         commentHTML += `</div>`;

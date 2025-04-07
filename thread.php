@@ -52,6 +52,123 @@ include('includes/header.php');
         <span><?php echo htmlspecialchars($thread['title']); ?></span>
     </div>
     
+    <style>
+        .admin-comment-action {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .admin-comment-action .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .admin-comment-action .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        .comment-footer {
+            margin-top: 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .comment-footer a {
+            margin-right: 10px;
+        }
+        
+        .comment {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .comment-profilepic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        
+        .comment-meta {
+            font-size: 14px;
+        }
+        
+        .comment-author {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .comment-date {
+            color: #666;
+        }
+        
+        .comment-content {
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .admin-thread-action .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .admin-thread-action .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        .thread-detail {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .thread-content {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+        
+        .thread-actions {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .thread-actions a {
+            margin-right: 15px;
+        }
+    </style>
+    
     <div class="thread-detail">
         <h2><?php echo htmlspecialchars($thread['title']); ?></h2>
         <p class="thread-meta">
@@ -61,12 +178,20 @@ include('includes/header.php');
         <div class="thread-content">
             <?php echo nl2br(htmlspecialchars($thread['content'])); ?>
         </div>
-        <?php if (isset($_SESSION['username'])): ?>
         <div class="thread-actions">
-            <a href="#" class="report-link" data-toggle="modal" data-target="#reportModal" 
-               data-type="thread" data-id="<?php echo $thread_id; ?>">Report Thread</a>
+            <?php if (isset($_SESSION['username'])): ?>
+                <a href="#" class="report-link" data-toggle="modal" data-target="#reportModal" 
+                   data-type="thread" data-id="<?php echo $thread_id; ?>">Report Thread</a>
+                
+                <?php if (isset($_SESSION['type']) && $_SESSION['type'] === 'admin'): ?>
+                    <form action="admin_actions.php" method="post" class="admin-thread-action" style="display: inline-block; margin-left: 15px;">
+                        <input type="hidden" name="action" value="delete_thread">
+                        <input type="hidden" name="thread_id" value="<?php echo $thread_id; ?>">
+                        <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this thread? All comments will be deleted as well. This action cannot be undone.')">Delete Thread</button>
+                    </form>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
     
     <h3>Comments</h3>

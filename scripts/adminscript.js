@@ -158,142 +158,236 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to search users
 function searchUsers(searchTerm) {
+    console.log('Searching users with term:', searchTerm);
     const resultsContainer = document.getElementById('user-results');
+    
+    if (!resultsContainer) {
+        console.error('User results container not found');
+        return;
+    }
+    
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching users...</div>';
     
-    fetch(`admin_handler.php?action=search_users&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (data.users.length > 0) {
-                    let html = '<div class="user-table-container">';
-                    html += '<table class="user-table">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    html += '<th>Profile</th>';
-                    html += '<th>Username</th>';
-                    html += '<th>Email</th>';
-                    html += '<th>Name</th>';
-                    html += '<th>Type</th>';
-                    html += '<th>Books</th>';
-                    html += '<th>Comments</th>';
-                    html += '<th>Actions</th>';
-                    html += '</tr>';
-                    html += '</thead>';
-                    html += '<tbody>';
-                    
-                    data.users.forEach(user => {
-                        html += user.html;
-                    });
-                    
-                    html += '</tbody>';
-                    html += '</table>';
-                    html += '</div>';
-                    
-                    resultsContainer.innerHTML = html;
+    // Create an AJAX request using XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    const timestamp = new Date().getTime();
+    const url = `admin_handler.php?action=search_users&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    
+    xhr.open('GET', url, true);
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                
+                if (data.success) {
+                    if (data.users && data.users.length > 0) {
+                        let html = '<div class="user-table-container">';
+                        html += '<table class="user-table">';
+                        html += '<thead>';
+                        html += '<tr>';
+                        html += '<th>Profile</th>';
+                        html += '<th>Username</th>';
+                        html += '<th>Email</th>';
+                        html += '<th>Name</th>';
+                        html += '<th>Type</th>';
+                        html += '<th>Books</th>';
+                        html += '<th>Comments</th>';
+                        html += '<th>Actions</th>';
+                        html += '</tr>';
+                        html += '</thead>';
+                        html += '<tbody>';
+                        
+                        data.users.forEach(user => {
+                            html += user.html;
+                        });
+                        
+                        html += '</tbody>';
+                        html += '</table>';
+                        html += '</div>';
+                        
+                        resultsContainer.innerHTML = html;
+                    } else {
+                        resultsContainer.innerHTML = '<p>No users found matching your search.</p>';
+                    }
                 } else {
-                    resultsContainer.innerHTML = '<p>No users found matching your search.</p>';
+                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    console.error('API returned error:', data.message);
                 }
-            } else {
-                resultsContainer.innerHTML = `<p>Error: ${data.message}</p>`;
+            } catch (error) {
+                console.error('Error parsing JSON response:', error);
+                console.error('Raw response:', xhr.responseText);
+                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
             }
-        })
-        .catch(error => {
-            resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
-        });
+        } else {
+            console.error('HTTP Error:', xhr.status, xhr.statusText);
+            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Network error occurred');
+        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
+        resultsContainer.innerHTML += `<p><button onclick="searchUsers('${searchTerm}')" class="retry-button">Retry</button></p>`;
+    };
+    
+    xhr.send();
 }
 
 // Function to search books
 function searchBooks(searchTerm) {
+    console.log('Searching books with term:', searchTerm);
     const resultsContainer = document.getElementById('book-results');
+    
+    if (!resultsContainer) {
+        console.error('Book results container not found');
+        return;
+    }
+    
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching books...</div>';
     
-    fetch(`admin_handler.php?action=search_books&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (data.books.length > 0) {
-                    let html = '<div class="book-table-container">';
-                    html += '<table class="book-table">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    html += '<th>Cover</th>';
-                    html += '<th>Title</th>';
-                    html += '<th>Category</th>';
-                    html += '<th>Status</th>';
-                    html += '<th>Owner</th>';
-                    html += '<th>Actions</th>';
-                    html += '</tr>';
-                    html += '</thead>';
-                    html += '<tbody>';
-                    
-                    data.books.forEach(book => {
-                        html += book.html;
-                    });
-                    
-                    html += '</tbody>';
-                    html += '</table>';
-                    html += '</div>';
-                    
-                    resultsContainer.innerHTML = html;
+    // Create an AJAX request using XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    const timestamp = new Date().getTime();
+    const url = `admin_handler.php?action=search_books&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    
+    xhr.open('GET', url, true);
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                
+                if (data.success) {
+                    if (data.books && data.books.length > 0) {
+                        let html = '<div class="book-table-container">';
+                        html += '<table class="book-table">';
+                        html += '<thead>';
+                        html += '<tr>';
+                        html += '<th>Cover</th>';
+                        html += '<th>Title</th>';
+                        html += '<th>Category</th>';
+                        html += '<th>Status</th>';
+                        html += '<th>Owner</th>';
+                        html += '<th>Actions</th>';
+                        html += '</tr>';
+                        html += '</thead>';
+                        html += '<tbody>';
+                        
+                        data.books.forEach(book => {
+                            html += book.html;
+                        });
+                        
+                        html += '</tbody>';
+                        html += '</table>';
+                        html += '</div>';
+                        
+                        resultsContainer.innerHTML = html;
+                    } else {
+                        resultsContainer.innerHTML = '<p>No books found matching your search.</p>';
+                    }
                 } else {
-                    resultsContainer.innerHTML = '<p>No books found matching your search.</p>';
+                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    console.error('API returned error:', data.message);
                 }
-            } else {
-                resultsContainer.innerHTML = `<p>Error: ${data.message}</p>`;
+            } catch (error) {
+                console.error('Error parsing JSON response:', error);
+                console.error('Raw response:', xhr.responseText);
+                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
             }
-        })
-        .catch(error => {
-            resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
-        });
+        } else {
+            console.error('HTTP Error:', xhr.status, xhr.statusText);
+            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Network error occurred');
+        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
+        resultsContainer.innerHTML += `<p><button onclick="searchBooks('${searchTerm}')" class="retry-button">Retry</button></p>`;
+    };
+    
+    xhr.send();
 }
 
 // Function to search threads
 function searchThreads(searchTerm) {
+    console.log('Searching threads with term:', searchTerm);
     const resultsContainer = document.getElementById('thread-admin-results');
+    
+    if (!resultsContainer) {
+        console.error('Thread results container not found');
+        return;
+    }
+    
     resultsContainer.innerHTML = '<div class="loading-indicator">Searching threads...</div>';
     
-    fetch(`admin_handler.php?action=search_threads&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                if (data.threads.length > 0) {
-                    let html = '<div class="thread-table-container">';
-                    html += '<table class="thread-table">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    html += '<th>Title</th>';
-                    html += '<th>Author</th>';
-                    html += '<th>Created</th>';
-                    html += '<th>Comments</th>';
-                    html += '<th>Actions</th>';
-                    html += '</tr>';
-                    html += '</thead>';
-                    html += '<tbody>';
-                    
-                    data.threads.forEach(thread => {
-                        html += thread.html;
-                    });
-                    
-                    html += '</tbody>';
-                    html += '</table>';
-                    html += '</div>';
-                    
-                    resultsContainer.innerHTML = html;
+    // Create an AJAX request using XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    const timestamp = new Date().getTime();
+    const url = `admin_handler.php?action=search_threads&search=${encodeURIComponent(searchTerm)}&_=${timestamp}`;
+    
+    xhr.open('GET', url, true);
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                
+                if (data.success) {
+                    if (data.threads && data.threads.length > 0) {
+                        let html = '<div class="thread-table-container">';
+                        html += '<table class="thread-table">';
+                        html += '<thead>';
+                        html += '<tr>';
+                        html += '<th>Title</th>';
+                        html += '<th>Author</th>';
+                        html += '<th>Created</th>';
+                        html += '<th>Comments</th>';
+                        html += '<th>Actions</th>';
+                        html += '</tr>';
+                        html += '</thead>';
+                        html += '<tbody>';
+                        
+                        data.threads.forEach(thread => {
+                            html += thread.html;
+                        });
+                        
+                        html += '</tbody>';
+                        html += '</table>';
+                        html += '</div>';
+                        
+                        resultsContainer.innerHTML = html;
+                    } else {
+                        resultsContainer.innerHTML = '<p>No threads found matching your search.</p>';
+                    }
                 } else {
-                    resultsContainer.innerHTML = '<p>No threads found matching your search.</p>';
+                    resultsContainer.innerHTML = `<p class="error-message">Error: ${data.message || 'Unknown error'}</p>`;
+                    console.error('API returned error:', data.message);
                 }
-            } else {
-                resultsContainer.innerHTML = `<p>Error: ${data.message}</p>`;
+            } catch (error) {
+                console.error('Error parsing JSON response:', error);
+                console.error('Raw response:', xhr.responseText);
+                resultsContainer.innerHTML = `<p class="error-message">Error parsing server response. See console for details.</p>`;
             }
-        })
-        .catch(error => {
-            resultsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
-        });
+        } else {
+            console.error('HTTP Error:', xhr.status, xhr.statusText);
+            resultsContainer.innerHTML = `<p class="error-message">HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Network error occurred');
+        resultsContainer.innerHTML = '<p class="error-message">Network error occurred. Please check your connection and try again.</p>';
+        resultsContainer.innerHTML += `<p><button onclick="searchThreads('${searchTerm}')" class="retry-button">Retry</button></p>`;
+    };
+    
+    xhr.send();
 }
 
 // Function to search content across all content types
 function searchContent(searchTerm) {
+    console.log('Loading content overview...');
     const resultsContainer = document.getElementById('content-search-results');
     const summaryContainer = document.getElementById('content-search-summary');
     
@@ -302,101 +396,215 @@ function searchContent(searchTerm) {
         return;
     }
     
-    if (!searchTerm.trim()) {
-        resultsContainer.innerHTML = '<p>Please enter a search term to find content.</p>';
-        summaryContainer.style.display = 'none';
-        return;
-    }
-    
-    resultsContainer.innerHTML = '<div class="loading-indicator">Searching content...</div>';
+    resultsContainer.innerHTML = '<div class="loading-indicator">Loading content overview...</div>';
     summaryContainer.style.display = 'none';
     
-    fetch(`admin_handler.php?action=search_content&search=${encodeURIComponent(searchTerm)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-            }
-            
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error(`Expected JSON response but got ${contentType}`);
-            }
-            
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Update summary
-                if (data.summary) {
-                    document.getElementById('total-results').textContent = data.summary.total;
-                    document.getElementById('book-results-count').textContent = data.summary.books;
-                    document.getElementById('thread-results-count').textContent = data.summary.threads;
-                    document.getElementById('comment-results-count').textContent = data.summary.comments;
-                    summaryContainer.style.display = 'block';
-                }
+    // Debug: log the URL we're fetching
+    const timestamp = new Date().getTime();
+    const url = `admin_handler.php?action=get_content_overview&_=${timestamp}`;
+    console.log('Fetching content overview from:', url);
+    
+    // Use XMLHttpRequest instead of fetch for better compatibility and error handling
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    
+    xhr.onload = function() {
+        console.log('XHR status:', xhr.status);
+        console.log('Response text preview:', xhr.responseText.substring(0, 200));
+        
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                console.log('Parsed data:', data);
                 
-                // Check if we have any results
-                if (data.summary && data.summary.total > 0) {
-                    // Create results table
-                    let html = '<div class="content-search-table-container">';
-                    html += '<table class="content-search-table">';
-                    html += '<thead>';
-                    html += '<tr>';
-                    html += '<th>Type</th>';
-                    html += '<th>Title</th>';
-                    html += '<th>Content</th>';
-                    html += '<th>Author</th>';
-                    html += '<th>Date</th>';
-                    html += '<th>Actions</th>';
-                    html += '</tr>';
-                    html += '</thead>';
-                    html += '<tbody>';
-                    
-                    // Add books
-                    if (data.results.books && data.results.books.length > 0) {
-                        data.results.books.forEach(book => {
-                            html += book.html;
-                        });
+                if (data.success) {
+                    // Update summary
+                    if (data.summary) {
+                        document.getElementById('total-results').textContent = data.summary.total;
+                        document.getElementById('book-results-count').textContent = data.summary.books;
+                        document.getElementById('thread-results-count').textContent = data.summary.threads;
+                        document.getElementById('comment-results-count').textContent = data.summary.comments;
+                        summaryContainer.style.display = 'block';
                     }
                     
-                    // Add threads
-                    if (data.results.threads && data.results.threads.length > 0) {
-                        data.results.threads.forEach(thread => {
-                            html += thread.html;
-                        });
+                    if (!data.content || (!data.content.books && !data.content.threads && !data.content.comments)) {
+                        resultsContainer.innerHTML = '<p>No content found.</p>';
+                        return;
                     }
                     
-                    // Add comments
-                    if (data.results.comments && data.results.comments.length > 0) {
-                        data.results.comments.forEach(comment => {
-                            html += comment.html;
-                        });
-                    }
+                    // Generate content overview
+                    let html = '<div class="content-overview">';
                     
-                    html += '</tbody>';
-                    html += '</table>';
+                    // Recent activity section
+                    html += '<div class="overview-section">';
+                    html += '<h4>Recent Activity</h4>';
+                    
+                    // Books section
+                    html += '<div class="content-section">';
+                    html += '<h5>Latest Books</h5>';
+                    if (data.content.books && data.content.books.length > 0) {
+                        html += '<table class="overview-table">';
+                        html += '<thead><tr><th>Title</th><th>User</th><th>Date</th><th>Actions</th></tr></thead>';
+                        html += '<tbody>';
+                        data.content.books.forEach(book => {
+                            html += '<tr>';
+                            html += '<td><a href="book_detail.php?id=' + book.book_id + '">' + book.title + '</a></td>';
+                            html += '<td>' + book.username + '</td>';
+                            html += '<td>' + formatDate(book.created_at) + '</td>';
+                            html += '<td>';
+                            html += '<a href="book_detail.php?id=' + book.book_id + '" class="view-button">View</a>';
+                            html += '<form action="admin_actions.php" method="post" class="inline-form">';
+                            html += '<input type="hidden" name="action" value="delete_book">';
+                            html += '<input type="hidden" name="book_id" value="' + book.book_id + '">';
+                            html += '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this book? This action cannot be undone.\')">Delete</button>';
+                            html += '</form>';
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</tbody>';
+                        html += '</table>';
+                    } else {
+                        html += '<p>No recent books found.</p>';
+                    }
                     html += '</div>';
+                    
+                    // Threads section
+                    html += '<div class="content-section">';
+                    html += '<h5>Latest Discussions</h5>';
+                    if (data.content.threads && data.content.threads.length > 0) {
+                        html += '<table class="overview-table">';
+                        html += '<thead><tr><th>Title</th><th>User</th><th>Date</th><th>Actions</th></tr></thead>';
+                        html += '<tbody>';
+                        data.content.threads.forEach(thread => {
+                            html += '<tr>';
+                            html += '<td><a href="thread.php?id=' + thread.thread_id + '">' + thread.title + '</a></td>';
+                            html += '<td>' + thread.username + '</td>';
+                            html += '<td>' + formatDate(thread.created_at) + '</td>';
+                            html += '<td>';
+                            html += '<a href="thread.php?id=' + thread.thread_id + '" class="view-button">View</a>';
+                            html += '<form action="admin_actions.php" method="post" class="inline-form">';
+                            html += '<input type="hidden" name="action" value="delete_thread">';
+                            html += '<input type="hidden" name="thread_id" value="' + thread.thread_id + '">';
+                            html += '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this thread? All comments will be deleted as well. This action cannot be undone.\')">Delete</button>';
+                            html += '</form>';
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</tbody>';
+                        html += '</table>';
+                    } else {
+                        html += '<p>No recent discussions found.</p>';
+                    }
+                    html += '</div>';
+                    
+                    // Comments section
+                    html += '<div class="content-section">';
+                    html += '<h5>Latest Comments</h5>';
+                    if (data.content.comments && data.content.comments.length > 0) {
+                        html += '<table class="overview-table">';
+                        html += '<thead><tr><th>Comment</th><th>User</th><th>Thread</th><th>Date</th><th>Actions</th></tr></thead>';
+                        html += '<tbody>';
+                        data.content.comments.forEach(comment => {
+                            html += '<tr>';
+                            html += '<td>' + comment.content.substring(0, 50) + (comment.content.length > 50 ? '...' : '') + '</td>';
+                            html += '<td>' + comment.username + '</td>';
+                            html += '<td><a href="thread.php?id=' + comment.thread_id + '">' + comment.thread_title + '</a></td>';
+                            html += '<td>' + formatDate(comment.created_at) + '</td>';
+                            html += '<td>';
+                            html += '<a href="thread.php?id=' + comment.thread_id + '#comment-' + comment.comment_id + '" class="view-button">View</a>';
+                            html += '<form action="admin_actions.php" method="post" class="inline-form">';
+                            html += '<input type="hidden" name="action" value="delete_comment">';
+                            html += '<input type="hidden" name="comment_id" value="' + comment.comment_id + '">';
+                            html += '<button type="submit" class="delete-button" onclick="return confirm(\'Are you sure you want to delete this comment? This action cannot be undone.\')">Delete</button>';
+                            html += '</form>';
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        html += '</tbody>';
+                        html += '</table>';
+                    } else {
+                        html += '<p>No recent comments found.</p>';
+                    }
+                    html += '</div>';
+                    
+                    html += '</div>'; // End overview-section
+                    html += '</div>'; // End content-overview
                     
                     resultsContainer.innerHTML = html;
                 } else {
-                    resultsContainer.innerHTML = '<p>No content found matching your search.</p>';
+                    console.error('API returned error:', data.message);
+                    resultsContainer.innerHTML = `
+                        <div class="error-message">
+                            <p>Error: ${data.message || 'Unknown error loading content overview'}</p>
+                            <button onclick="searchContent('')" class="retry-button">Retry</button>
+                        </div>`;
                     summaryContainer.style.display = 'none';
                 }
-            } else {
-                resultsContainer.innerHTML = `<p>Error: ${data.message || 'Unknown error'}</p>`;
+            } catch (error) {
+                console.error('Error parsing JSON response:', error);
+                console.error('Raw response:', xhr.responseText);
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        <p>Error parsing server response. See console for details.</p>
+                        <button onclick="searchContent('')" class="retry-button">Retry</button>
+                    </div>`;
                 summaryContainer.style.display = 'none';
             }
-        })
-        .catch(error => {
-            console.error('Error searching content:', error);
-            resultsContainer.innerHTML = `<p>Error searching content: ${error.message}</p>`;
+        } else {
+            console.error('HTTP Error:', xhr.status, xhr.statusText);
+            resultsContainer.innerHTML = `
+                <div class="error-message">
+                    <p>HTTP Error ${xhr.status}: ${xhr.statusText}</p>
+                    <button onclick="searchContent('')" class="retry-button">Retry</button>
+                </div>`;
             summaryContainer.style.display = 'none';
-        });
+        }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Network error occurred');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Network error occurred. Please check your connection and try again.</p>
+                <button onclick="searchContent('')" class="retry-button">Retry</button>
+            </div>`;
+        summaryContainer.style.display = 'none';
+    };
+    
+    xhr.timeout = 10000; // 10 seconds timeout
+    xhr.ontimeout = function() {
+        console.error('Request timed out');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Request timed out. Server might be busy.</p>
+                <button onclick="searchContent('')" class="retry-button">Retry</button>
+            </div>`;
+        summaryContainer.style.display = 'none';
+    };
+    
+    // Send the request
+    try {
+        xhr.send();
+    } catch (error) {
+        console.error('Error sending request:', error);
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Error sending request: ${error.message}</p>
+                <button onclick="searchContent('')" class="retry-button">Retry</button>
+            </div>`;
+        summaryContainer.style.display = 'none';
+    }
+}
+
+// Helper function to format dates
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }
 
 // Function to load reports
-function loadReports(status) {
-    console.log('loadReports called with status:', status);
+function loadReports(status = 'all') {
+    console.log('Loading reports with status filter:', status);
     const resultsContainer = document.getElementById('report-results');
     
     if (!resultsContainer) {
@@ -404,87 +612,146 @@ function loadReports(status) {
         return;
     }
     
+    // Show loading indicator
     resultsContainer.innerHTML = '<div class="loading-indicator">Loading reports...</div>';
     
-    // Create an AJAX request using XMLHttpRequest
-    const xhr = new XMLHttpRequest();
+    // Get all report filter elements and update active class
+    const filterElements = document.querySelectorAll('.report-filter');
+    filterElements.forEach(filter => {
+        if (filter.getAttribute('data-status') === status) {
+            filter.classList.add('active');
+        } else {
+            filter.classList.remove('active');
+        }
+    });
+    
+    // Debug: log the URL we're fetching
     const timestamp = new Date().getTime();
-    const url = `admin_handler.php?action=get_reports&status=${encodeURIComponent(status)}&_=${timestamp}`;
+    const url = `admin_handler.php?action=get_reports&status=${status}&_=${timestamp}`;
+    console.log('Fetching reports from:', url);
     
-    console.log('Requesting reports from URL:', url);
-    
+    // Use XMLHttpRequest for better compatibility and error handling
+    const xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     
     xhr.onload = function() {
-        console.log('Response received, status:', xhr.status);
+        console.log('XHR status:', xhr.status);
+        console.log('Response text preview:', xhr.responseText.substring(0, 200));
+        
+        // First, check if our fallback PHP report display is already showing
+        const fallbackDisplay = document.getElementById('fallback-reports');
+        if (fallbackDisplay && fallbackDisplay.style.display === 'block') {
+            console.log('Fallback display is already active, skipping AJAX processing');
+            
+            // Still remove the loading indicator
+            const loadingIndicator = resultsContainer.querySelector('.loading-indicator');
+            if (loadingIndicator) loadingIndicator.remove();
+            
+            return;
+        }
         
         if (xhr.status === 200) {
             try {
-                console.log('Response text:', xhr.responseText.substring(0, 200) + '...');
-                
                 const data = JSON.parse(xhr.responseText);
-                console.log('Parsed JSON data:', data);
+                console.log('Parsed report data:', data);
+                
+                // Remove loading indicator
+                const loadingIndicator = resultsContainer.querySelector('.loading-indicator');
+                if (loadingIndicator) loadingIndicator.remove();
                 
                 if (data.success) {
-                    if (data.reports && data.reports.length > 0) {
-                        console.log('Found reports:', data.reports.length);
-                        
-                        let html = '<div class="report-table-container">';
-                        html += '<table class="report-table">';
-                        html += '<thead>';
-                        html += '<tr>';
-                        html += '<th>Content</th>';
-                        html += '<th>Reporter</th>';
-                        html += '<th>Reason</th>';
-                        html += '<th>Status</th>';
-                        html += '<th>Date</th>';
-                        html += '<th>Actions</th>';
-                        html += '</tr>';
-                        html += '</thead>';
-                        html += '<tbody>';
-                        
-                        data.reports.forEach(report => {
-                            html += report.html;
-                        });
-                        
-                        html += '</tbody>';
-                        html += '</table>';
-                        html += '</div>';
-                        
-                        resultsContainer.innerHTML = html;
-                        
-                        // Set up event listeners for report action buttons
-                        setupReportActionListeners();
-                    } else {
-                        const statusDisplay = status === 'all' ? 'any status' : `status "${status}"`;
-                        resultsContainer.innerHTML = `<p>No reports found with ${statusDisplay}.</p>`;
-                        console.log('No reports found with status:', status);
+                    if (!data.reports || data.reports.length === 0) {
+                        resultsContainer.innerHTML = '<p>No reports found with selected status.</p>';
+                        return;
                     }
+                    
+                    // Create table for reports
+                    let html = '<div class="report-table-container">';
+                    html += '<table class="report-table">';
+                    html += '<thead>';
+                    html += '<tr>';
+                    html += '<th>Content</th>';
+                    html += '<th>Reporter</th>';
+                    html += '<th>Reason</th>';
+                    html += '<th>Status</th>';
+                    html += '<th>Date</th>';
+                    html += '<th>Actions</th>';
+                    html += '</tr>';
+                    html += '</thead>';
+                    html += '<tbody>';
+                    
+                    // Add each report to the table
+                    data.reports.forEach(report => {
+                        html += report.html;
+                    });
+                    
+                    html += '</tbody>';
+                    html += '</table>';
+                    html += '</div>';
+                    
+                    // Update the container with the new HTML
+                    resultsContainer.innerHTML = html;
+                    
+                    // Add event listeners to view report buttons
+                    setupReportActionListeners();
                 } else {
-                    resultsContainer.innerHTML = `<p>Error: ${data.message || 'Unknown error'}</p>`;
                     console.error('API returned error:', data.message);
+                    resultsContainer.innerHTML = `
+                        <div class="error-message">
+                            <p>Error: ${data.message || 'Unknown error loading reports'}</p>
+                            <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+                        </div>`;
                 }
             } catch (error) {
                 console.error('Error parsing JSON response:', error);
                 console.error('Raw response:', xhr.responseText);
-                resultsContainer.innerHTML = `<p>Error parsing server response. See console for details.</p>`;
-                resultsContainer.innerHTML += `<p><a href="test_reports_api.php" target="_blank">Run API Test</a></p>`;
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        <p>Error parsing server response. See console for details.</p>
+                        <pre style="max-height: 100px; overflow: auto; background: #f5f5f5; padding: 5px; font-size: 12px;">${xhr.responseText.substring(0, 300)}...</pre>
+                        <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+                    </div>`;
             }
         } else {
             console.error('HTTP Error:', xhr.status, xhr.statusText);
-            resultsContainer.innerHTML = `<p>HTTP Error ${xhr.status}: ${xhr.statusText}</p>`;
-            resultsContainer.innerHTML += `<p><a href="test_reports_api.php" target="_blank">Run API Test</a></p>`;
+            resultsContainer.innerHTML = `
+                <div class="error-message">
+                    <p>HTTP Error ${xhr.status}: ${xhr.statusText}</p>
+                    <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+                </div>`;
         }
     };
     
     xhr.onerror = function() {
         console.error('Network error occurred');
-        resultsContainer.innerHTML = '<p>Network error occurred. Please check your connection and try again.</p>';
-        resultsContainer.innerHTML += `<p><button onclick="loadReports('${status}')" style="margin-top: 10px;">Retry</button></p>`;
-        resultsContainer.innerHTML += `<p><a href="test_reports_api.php" target="_blank">Run API Test</a></p>`;
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Network error occurred. Please check your connection and try again.</p>
+                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+            </div>`;
     };
     
-    xhr.send();
+    xhr.timeout = 10000; // 10 seconds timeout
+    xhr.ontimeout = function() {
+        console.error('Request timed out');
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Request timed out. Server might be busy.</p>
+                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+            </div>`;
+    };
+    
+    // Send the request
+    try {
+        xhr.send();
+    } catch (error) {
+        console.error('Error sending request:', error);
+        resultsContainer.innerHTML = `
+            <div class="error-message">
+                <p>Error sending request: ${error.message}</p>
+                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
+            </div>`;
+    }
 }
 
 // Function to set up event listeners for report action buttons
@@ -539,4 +806,125 @@ function showReportDetails(reportId) {
         .catch(error => {
             alert('Error loading report details: ' + error.message);
         });
+}
+
+// Initialize admin page
+function initAdminPage() {
+    console.log('Initializing admin page...');
+    
+    // Set up tab navigation
+    const tabLinks = document.querySelectorAll('.tab-link');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Tab switching logic
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            console.log('Tab clicked:', tabId);
+            
+            // Update active tab
+            tabLinks.forEach(tl => tl.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show selected tab content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                    
+                    // Load content based on tab
+                    if (tabId === 'reports') {
+                        loadReports('all');
+                    } else if (tabId === 'content-search') {
+                        searchContent('');
+                    }
+                }
+            });
+            
+            // Update URL hash for bookmarking/sharing
+            window.location.hash = tabId;
+        });
+    });
+    
+    // Handle URL hash on page load
+    if (window.location.hash) {
+        const tabId = window.location.hash.substring(1);
+        const tabLink = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
+        if (tabLink) {
+            tabLink.click();
+        }
+    }
+    
+    // Set up user search form
+    const userSearchForm = document.getElementById('user-search-form');
+    if (userSearchForm) {
+        userSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('user-search').value;
+            searchUsers(searchTerm);
+        });
+    }
+    
+    // Set up book search form
+    const bookSearchForm = document.getElementById('book-search-form');
+    if (bookSearchForm) {
+        bookSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('book-search').value;
+            searchBooks(searchTerm);
+        });
+    }
+    
+    // Set up thread search form
+    const threadSearchForm = document.getElementById('thread-admin-search-form');
+    if (threadSearchForm) {
+        threadSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchTerm = document.getElementById('thread-admin-search').value;
+            searchThreads(searchTerm);
+        });
+    }
+    
+    // Set up report filters
+    const reportFilters = document.querySelectorAll('.report-filter');
+    if (reportFilters.length > 0) {
+        reportFilters.forEach(filter => {
+            filter.addEventListener('click', function(e) {
+                e.preventDefault();
+                const status = this.getAttribute('data-status');
+                loadReports(status);
+            });
+        });
+        
+        // Load initial reports if we're on the reports tab
+        if (document.querySelector('.tab-link[data-tab="reports"].active')) {
+            loadReports('all');
+        }
+    }
+    
+    // Modal close button handling
+    const modalCloseButtons = document.querySelectorAll('.modal .close');
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal) modal.style.display = 'none';
+        });
+    });
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
+    
+    console.log('Admin page initialization complete');
+}
+
+// Call init function when DOM is loaded
+document.addEventListener('DOMContentLoaded', initAdminPage);
+
+// Also call initAdminPage immediately if the DOM is already loaded
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    initAdminPage();
 } 

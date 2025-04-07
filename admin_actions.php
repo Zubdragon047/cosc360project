@@ -268,8 +268,8 @@ try {
                 redirectBack();
             }
             
-            // Check if comment exists
-            $sql = "SELECT * FROM comments WHERE comment_id = :comment_id";
+            // Check if comment exists and get thread_id for redirection
+            $sql = "SELECT thread_id FROM comments WHERE comment_id = :comment_id";
             $stmt = $pdo->prepare($sql);
             $stmt->bindParam(':comment_id', $comment_id, PDO::PARAM_INT);
             $stmt->execute();
@@ -279,12 +279,7 @@ try {
                 redirectBack();
             }
             
-            // Get thread_id for potential redirection
-            $commentData = $stmt->fetch(PDO::FETCH_ASSOC);
-            $thread_id = $commentData['thread_id'];
-            
-            // Begin transaction
-            $pdo->beginTransaction();
+            $thread_id = $stmt->fetch(PDO::FETCH_ASSOC)['thread_id'];
             
             try {
                 // Delete comment from database
@@ -293,21 +288,17 @@ try {
                 $stmt->bindParam(':comment_id', $comment_id, PDO::PARAM_INT);
                 $stmt->execute();
                 
-                // Commit transaction
-                $pdo->commit();
-                
                 $_SESSION['success_message'] = "Comment has been deleted.";
                 
-                // Check if we came from a thread page
-                if (isset($_POST['from_thread']) && !empty($thread_id)) {
+                // Check if we need to redirect to the thread detail
+                $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+                if (strpos($referrer, 'thread.php') !== false) {
                     header("Location: thread.php?id=" . $thread_id);
                     exit;
                 } else {
                     redirectBack();
                 }
             } catch (Exception $e) {
-                // Rollback transaction on error
-                $pdo->rollBack();
                 $_SESSION['error_message'] = "Error deleting comment: " . $e->getMessage();
                 redirectBack();
             }

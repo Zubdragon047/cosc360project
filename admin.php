@@ -24,6 +24,195 @@ include('includes/header.php');
     
     <h2 style="color: #f44336; border-bottom: 2px solid #f44336; padding-bottom: 10px;">Admin Dashboard</h2>
     
+    <style>
+        /* Error message styling */
+        .error-message {
+            background-color: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        /* Retry button styling */
+        .retry-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .retry-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        /* Loading indicator */
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Table styling improvements */
+        .user-table, .book-table, .thread-table, .report-table, .content-search-table, .overview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: white;
+            border: 1px solid #aaa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        
+        .user-table th, .book-table th, .thread-table th, .report-table th, .content-search-table th, .overview-table th {
+            background-color: #e0e0e0;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 2px solid #bbb;
+            position: sticky;
+            top: 0;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .user-table td, .book-table td, .thread-table td, .report-table td, .content-search-table td, .overview-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ccc;
+            color: #333;
+        }
+        
+        .user-table tr:hover, .book-table tr:hover, .thread-table tr:hover, .report-table tr:hover, .content-search-table tr:hover, .overview-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        /* Alternate row colors for better readability */
+        .user-table tr:nth-child(even), 
+        .book-table tr:nth-child(even), 
+        .thread-table tr:nth-child(even), 
+        .report-table tr:nth-child(even), 
+        .content-search-table tr:nth-child(even),
+        .overview-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* Action buttons styling */
+        .view-button, .resolve-button, .dismiss-button, .promote-button, .demote-button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        .view-button {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .resolve-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .dismiss-button {
+            background-color: #9e9e9e;
+            color: white;
+        }
+        
+        .promote-button {
+            background-color: #673AB7;
+            color: white;
+        }
+        
+        .demote-button {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .view-button:hover { background-color: #0b7dda; }
+        .resolve-button:hover { background-color: #388E3C; }
+        .dismiss-button:hover { background-color: #757575; }
+        .promote-button:hover { background-color: #5E35B1; }
+        .demote-button:hover { background-color: #F57C00; }
+        .delete-button:hover { background-color: #d32f2f; }
+        
+        /* Table container styles */
+        .user-table-container, 
+        .book-table-container, 
+        .thread-table-container, 
+        .report-table-container,
+        .content-search-table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            margin-bottom: 20px;
+        }
+        
+        /* Add table header styling */
+        .user-table thead tr, 
+        .book-table thead tr, 
+        .thread-table thead tr, 
+        .report-table thead tr, 
+        .content-search-table thead tr,
+        .overview-table thead tr {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Add outline to table headers for visual separation */
+        .user-table th, 
+        .book-table th, 
+        .thread-table th, 
+        .report-table th, 
+        .content-search-table th,
+        .overview-table th {
+            border-right: 1px solid #bbb;
+        }
+        
+        .user-table th:last-child, 
+        .book-table th:last-child, 
+        .thread-table th:last-child, 
+        .report-table th:last-child, 
+        .content-search-table th:last-child,
+        .overview-table th:last-child {
+            border-right: none;
+        }
+        
+        /* Action buttons container */
+        .actions-column {
+            white-space: nowrap;
+            min-width: 180px;
+            background-color: rgba(249, 249, 249, 0.7);
+        }
+        
+        /* Inline form styling for action buttons */
+        .inline-form {
+            display: inline-block;
+            margin-right: 3px;
+        }
+    </style>
+    
     <?php if (isset($_SESSION['success_message'])): ?>
         <div class="success-message"><?php echo $_SESSION['success_message']; ?></div>
         <?php unset($_SESSION['success_message']); ?>
@@ -39,7 +228,7 @@ include('includes/header.php');
         <button class="tab-link" data-tab="books">Book Management</button>
         <button class="tab-link" data-tab="threads">Discussion Management</button>
         <button class="tab-link" data-tab="reports">Reported Content</button>
-        <button class="tab-link" data-tab="content-search">Content Search</button>
+        <button class="tab-link" data-tab="content-search">Content Overview</button>
     </div>
     
     <div id="users" class="tab-content active">
@@ -179,20 +368,57 @@ include('includes/header.php');
     </div>
     
     <div id="content-search" class="tab-content">
-        <h3 class="admin-section-heading">Content Search</h3>
-        <p>Search across all content types (books, threads, comments).</p>
+        <h3 class="admin-section-heading">Content Overview</h3>
+        <p>Overview of recent content across the site.</p>
         
-        <div class="search-container">
-            <form id="content-search-form" onsubmit="return false;">
-                <div class="form-group">
-                    <input type="text" id="content-search-input" name="search" placeholder="Search books, threads, and comments...">
-                    <button type="button" class="submit" onclick="searchContent(document.getElementById('content-search-input').value);">Search</button>
-                </div>
-            </form>
-        </div>
+        <style>
+            .content-overview {
+                margin-top: 20px;
+            }
+            
+            .overview-section {
+                margin-bottom: 30px;
+            }
+            
+            .content-section {
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .content-section h5 {
+                margin-top: 0;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                color: #333;
+            }
+            
+            .overview-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            
+            .overview-table th {
+                background-color: #f5f5f5;
+                padding: 8px;
+                text-align: left;
+                border-bottom: 2px solid #ddd;
+            }
+            
+            .overview-table td {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .overview-table tr:hover {
+                background-color: #f1f1f1;
+            }
+        </style>
         
         <div id="content-search-summary" class="search-summary" style="display:none">
-            <p>Found <span id="total-results">0</span> results: 
+            <p>Content stats: <span id="total-results">0</span> items total: 
                <span id="book-results-count">0</span> books, 
                <span id="thread-results-count">0</span> threads, 
                <span id="comment-results-count">0</span> comments
@@ -200,8 +426,7 @@ include('includes/header.php');
         </div>
         
         <div id="content-search-results">
-            <!-- Content search results will be displayed here -->
-            <p>Enter a search term to find content across the site.</p>
+            <div class="loading-indicator">Loading content overview...</div>
         </div>
     </div>
     
@@ -307,17 +532,17 @@ include('includes/header.php');
                     echo '</div>';
                     
                     // Add JavaScript to show fallback after a timeout
-                    echo '<script>
+                    echo "<script>
                         setTimeout(function() {
-                            var loadingElem = document.querySelector("#report-results .loading-indicator");
-                            var fallbackElem = document.getElementById("fallback-reports");
+                            var loadingElem = document.querySelector('#report-results .loading-indicator');
+                            var fallbackElem = document.getElementById('fallback-reports');
                             
-                            if (loadingElem && fallbackElem && loadingElem.parentNode === document.getElementById("report-results")) {
-                                fallbackElem.style.display = "block";
-                                console.log("Showing fallback reports display");
+                            if (loadingElem && fallbackElem && loadingElem.parentNode === document.getElementById('report-results')) {
+                                fallbackElem.style.display = 'block';
+                                console.log('Showing fallback reports display');
                             }
                         }, 5000); // Show fallback after 5 seconds if AJAX hasn't completed
-                    </script>';
+                    </script>";
                 }
             } catch (PDOException $e) {
                 // Silently fail - we're just a fallback
@@ -341,6 +566,24 @@ include('includes/header.php');
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // If tab hash is content-search, load the content overview
+    if (window.location.hash === '#content-search') {
+        setTimeout(() => {
+            searchContent('');
+        }, 300);
+    }
+    
+    // Also load content overview when that tab is clicked
+    document.querySelector('[data-tab="content-search"]').addEventListener('click', function() {
+        setTimeout(() => {
+            searchContent('');
+        }, 100);
+    });
+});
+</script>
 
 <?php
 // Include footer

@@ -41,7 +41,8 @@ try {
                 'username' => $row['username'],
                 'content' => $row['content'],
                 'created_at' => $row['created_at'],
-                'profilepic' => $row['profilepic']
+                'profilepic' => $row['profilepic'],
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ];
         }
         
@@ -123,7 +124,8 @@ try {
                 'username' => $comment['username'],
                 'content' => $comment['content'],
                 'created_at' => $comment['created_at'],
-                'profilepic' => $comment['profilepic']
+                'profilepic' => $comment['profilepic'],
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ]
         ]);
         exit;

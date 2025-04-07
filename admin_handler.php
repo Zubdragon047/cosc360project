@@ -17,7 +17,108 @@ try {
     // Get action parameter
     $action = isset($_GET['action']) ? $_GET['action'] : '';
     
+    // Log the action for debugging
+    error_log("Admin handler called with action: " . $action);
+    
     switch ($action) {
+        case 'get_content_overview':
+            // Get recent content of each type
+            try {
+                $content = [
+                    'books' => [],
+                    'threads' => [],
+                    'comments' => []
+                ];
+                
+                // Get recent books
+                $sql = "SELECT b.*, u.username 
+                        FROM books b
+                        JOIN users u ON b.username = u.username
+                        ORDER BY b.created_at DESC
+                        LIMIT 10";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($books as $book) {
+                    $content['books'][] = [
+                        'book_id' => $book['book_id'],
+                        'title' => $book['title'],
+                        'username' => $book['username'],
+                        'created_at' => $book['created_at'],
+                        'category' => $book['category'],
+                        'status' => $book['status']
+                    ];
+                }
+                
+                // Get recent threads
+                $sql = "SELECT t.*, u.username
+                        FROM threads t
+                        JOIN users u ON t.username = u.username
+                        ORDER BY t.created_at DESC
+                        LIMIT 10";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $threads = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($threads as $thread) {
+                    $content['threads'][] = [
+                        'thread_id' => $thread['thread_id'],
+                        'title' => $thread['title'],
+                        'username' => $thread['username'],
+                        'created_at' => $thread['created_at']
+                    ];
+                }
+                
+                // Get recent comments
+                $sql = "SELECT c.*, u.username, t.title as thread_title
+                        FROM comments c
+                        JOIN users u ON c.username = u.username
+                        JOIN threads t ON c.thread_id = t.thread_id
+                        ORDER BY c.created_at DESC
+                        LIMIT 10";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach ($comments as $comment) {
+                    $content['comments'][] = [
+                        'comment_id' => $comment['comment_id'],
+                        'thread_id' => $comment['thread_id'],
+                        'thread_title' => $comment['thread_title'],
+                        'content' => $comment['content'],
+                        'username' => $comment['username'],
+                        'created_at' => $comment['created_at']
+                    ];
+                }
+                
+                // Get content counts for summary
+                $sql = "SELECT 
+                        (SELECT COUNT(*) FROM books) as book_count,
+                        (SELECT COUNT(*) FROM threads) as thread_count,
+                        (SELECT COUNT(*) FROM comments) as comment_count";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                $counts = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                $summary = [
+                    'total' => $counts['book_count'] + $counts['thread_count'] + $counts['comment_count'],
+                    'books' => $counts['book_count'],
+                    'threads' => $counts['thread_count'],
+                    'comments' => $counts['comment_count']
+                ];
+                
+                echo json_encode([
+                    'success' => true,
+                    'content' => $content,
+                    'summary' => $summary
+                ]);
+            } catch (PDOException $e) {
+                error_log("Database error in get_content_overview: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            }
+            break;
+            
         case 'search_users':
             $searchTerm = isset($_GET['search']) ? '%' . $_GET['search'] . '%' : '';
             
