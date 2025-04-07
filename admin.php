@@ -211,6 +211,103 @@ include('includes/header.php');
             display: inline-block;
             margin-right: 3px;
         }
+        
+        /* Report filters styling */
+        .report-filters {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        .report-filter {
+            padding: 8px 15px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #333;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .report-filter.active {
+            background-color: #f44336;
+            color: white;
+            border-color: #d32f2f;
+        }
+        
+        .report-filter:hover:not(.active) {
+            background-color: #ddd;
+            text-decoration: none;
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .status-indicator.pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-indicator.resolved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-indicator.dismissed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        /* Content type indicators */
+        .content-type-indicator {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .content-type-indicator[data-type="book"] {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        
+        .content-type-indicator[data-type="thread"] {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .content-type-indicator[data-type="comment"] {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        
+        /* Troubleshoot link */
+        .troubleshoot-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6c757d;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .troubleshoot-link:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
     </style>
     
     <?php if (isset($_SESSION['success_message'])): ?>
@@ -428,147 +525,405 @@ include('includes/header.php');
         <div id="content-search-results">
             <div class="loading-indicator">Loading content overview...</div>
         </div>
+        
+        <?php
+        // Server-side content overview (fallback)
+        try {
+            $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Get books
+            $sql = "SELECT b.*, u.username 
+                    FROM books b
+                    JOIN users u ON b.username = u.username
+                    ORDER BY b.created_at DESC
+                    LIMIT 10";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get threads
+            $sql = "SELECT t.*, u.username
+                    FROM threads t
+                    JOIN users u ON t.username = u.username
+                    ORDER BY t.created_at DESC
+                    LIMIT 10";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $threads = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Get comments
+            $sql = "SELECT c.*, u.username, t.title as thread_title
+                    FROM comments c
+                    JOIN users u ON c.username = u.username
+                    JOIN threads t ON c.thread_id = t.thread_id
+                    ORDER BY c.created_at DESC
+                    LIMIT 10";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // JavaScript to show the server-side content if AJAX fails
+            echo "<script>
+                setTimeout(function() {
+                    if (document.querySelector('#content-search-results .loading-indicator')) {
+                        document.getElementById('server-content-overview').style.display = 'block';
+                        document.querySelector('#content-search-results .loading-indicator').style.display = 'none';
+                    }
+                }, 5000);
+            </script>";
+            ?>
+            
+            <div id="server-content-overview" style="display: none;">
+                <div class="alert" style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                    <p>Server-rendered content overview shown after AJAX loading timeout.</p>
+                </div>
+                
+                <div class="content-overview">
+                    <div class="overview-section">
+                        <h4>Recent Activity</h4>
+                        
+                        <!-- Books section -->
+                        <div class="content-section">
+                            <h5>Latest Books (<?php echo count($books); ?>)</h5>
+                            <?php if (!empty($books)): ?>
+                                <table class="overview-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>User</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($books as $book): ?>
+                                            <tr>
+                                                <td><a href="book_detail.php?id=<?php echo $book['book_id']; ?>"><?php echo htmlspecialchars($book['title']); ?></a></td>
+                                                <td><?php echo htmlspecialchars($book['username']); ?></td>
+                                                <td><?php echo date('M j, Y g:i A', strtotime($book['created_at'])); ?></td>
+                                                <td>
+                                                    <a href="book_detail.php?id=<?php echo $book['book_id']; ?>" class="view-button">View</a>
+                                                    <form action="admin_actions.php" method="post" style="display:inline;">
+                                                        <input type="hidden" name="action" value="delete_book">
+                                                        <input type="hidden" name="book_id" value="<?php echo $book['book_id']; ?>">
+                                                        <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                                        <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php else: ?>
+                                <p>No recent books found.</p>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <!-- Threads section -->
+                        <div class="content-section">
+                            <h5>Latest Discussions (<?php echo count($threads); ?>)</h5>
+                            <?php if (!empty($threads)): ?>
+                                <table class="overview-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>User</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($threads as $thread): ?>
+                                            <tr>
+                                                <td><a href="thread.php?id=<?php echo $thread['thread_id']; ?>"><?php echo htmlspecialchars($thread['title']); ?></a></td>
+                                                <td><?php echo htmlspecialchars($thread['username']); ?></td>
+                                                <td><?php echo date('M j, Y g:i A', strtotime($thread['created_at'])); ?></td>
+                                                <td>
+                                                    <a href="thread.php?id=<?php echo $thread['thread_id']; ?>" class="view-button">View</a>
+                                                    <form action="admin_actions.php" method="post" style="display:inline;">
+                                                        <input type="hidden" name="action" value="delete_thread">
+                                                        <input type="hidden" name="thread_id" value="<?php echo $thread['thread_id']; ?>">
+                                                        <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                                        <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this thread? This will delete all comments.')">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php else: ?>
+                                <p>No recent discussions found.</p>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <!-- Comments section -->
+                        <div class="content-section">
+                            <h5>Latest Comments (<?php echo count($comments); ?>)</h5>
+                            <?php if (!empty($comments)): ?>
+                                <table class="overview-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Comment</th>
+                                            <th>User</th>
+                                            <th>Thread</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($comments as $comment): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars(substr($comment['content'], 0, 50)) . (strlen($comment['content']) > 50 ? '...' : ''); ?></td>
+                                                <td><?php echo htmlspecialchars($comment['username']); ?></td>
+                                                <td><a href="thread.php?id=<?php echo $comment['thread_id']; ?>"><?php echo htmlspecialchars($comment['thread_title']); ?></a></td>
+                                                <td><?php echo date('M j, Y g:i A', strtotime($comment['created_at'])); ?></td>
+                                                <td>
+                                                    <a href="thread.php?id=<?php echo $comment['thread_id']; ?>#comment-<?php echo $comment['comment_id']; ?>" class="view-button">View</a>
+                                                    <form action="admin_actions.php" method="post" style="display:inline;">
+                                                        <input type="hidden" name="action" value="delete_comment">
+                                                        <input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
+                                                        <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                                        <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this comment?')">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php else: ?>
+                                <p>No recent comments found.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+        } catch (PDOException $e) {
+            error_log("Error in content overview: " . $e->getMessage());
+        }
+        ?>
     </div>
     
     <div id="reports" class="tab-content">
         <h3 class="admin-section-heading">Reported Content</h3>
-        <p>View and handle reported content here.</p>
+        <p style="margin-bottom: 20px;">View and handle reported content here.</p>
         
-        <style>
-            .report-filters {
-                display: flex;
-                margin-bottom: 20px;
-                gap: 10px;
-            }
-            .report-filter {
-                padding: 8px 15px;
-                background-color: #f1f1f1;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-decoration: none;
-                color: #333;
-                display: inline-block;
-            }
-            .report-filter.active {
-                background-color: #f44336;
-                color: white;
-                border-color: #d32f2f;
-            }
-            .report-filter:hover:not(.active) {
-                background-color: #ddd;
-            }
-            
-            /* Status colors */
-            .status-pending {
-                color: #ff9800;
-                font-weight: bold;
-            }
-            .status-resolved {
-                color: #4CAF50;
-                font-weight: bold;
-            }
-            .status-dismissed {
-                color: #9e9e9e;
-                font-weight: bold;
-            }
-        </style>
+        <?php
+        // Get status filter from URL if it exists
+        $statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
+        ?>
         
         <div class="report-filters">
-            <a href="javascript:void(0);" class="report-filter active" data-status="all">All Reports</a>
-            <a href="javascript:void(0);" class="report-filter" data-status="pending">Pending</a>
-            <a href="javascript:void(0);" class="report-filter" data-status="resolved">Resolved</a>
-            <a href="javascript:void(0);" class="report-filter" data-status="dismissed">Dismissed</a>
+            <a href="admin.php?status=all#reports" class="report-filter <?php echo $statusFilter === 'all' ? 'active' : ''; ?>" data-status="all">All Reports</a>
+            <a href="admin.php?status=pending#reports" class="report-filter <?php echo $statusFilter === 'pending' ? 'active' : ''; ?>" data-status="pending">Pending</a>
+            <a href="admin.php?status=resolved#reports" class="report-filter <?php echo $statusFilter === 'resolved' ? 'active' : ''; ?>" data-status="resolved">Resolved</a>
+            <a href="admin.php?status=dismissed#reports" class="report-filter <?php echo $statusFilter === 'dismissed' ? 'active' : ''; ?>" data-status="dismissed">Dismissed</a>
         </div>
         
         <div id="report-results">
             <div class="loading-indicator">Loading reports...</div>
-            
-            <?php
-            // Fallback display of reports if AJAX fails
-            try {
-                $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                
-                $sql = "SELECT * FROM reports ORDER BY created_at DESC";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute();
-                
-                if ($stmt->rowCount() > 0) {
-                    echo '<div id="fallback-reports" style="display:none;">';
-                    echo '<h4>PHP Fallback Report Display</h4>';
-                    echo '<p><em>Note: This is a server-rendered fallback. AJAX loading failed.</em></p>';
-                    echo '<table class="report-table">';
-                    echo '<thead>';
-                    echo '<tr>';
-                    echo '<th>ID</th>';
-                    echo '<th>Content</th>';
-                    echo '<th>Reporter</th>';
-                    echo '<th>Reason</th>';
-                    echo '<th>Status</th>';
-                    echo '<th>Date</th>';
-                    echo '</tr>';
-                    echo '</thead>';
-                    echo '<tbody>';
-                    
-                    while ($report = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                        $contentTypeLabel = ucfirst($report['content_type']);
-                        $statusClass = 'status-' . $report['status'];
-                        $statusLabel = ucfirst($report['status']);
-                        
-                        echo '<tr>';
-                        echo '<td>' . $report['report_id'] . '</td>';
-                        echo '<td>' . htmlspecialchars($contentTypeLabel) . ' #' . $report['content_id'] . '</td>';
-                        echo '<td>' . htmlspecialchars($report['reporter_username']) . '</td>';
-                        echo '<td>' . htmlspecialchars($report['reason']) . '</td>';
-                        echo '<td class="' . $statusClass . '">' . $statusLabel . '</td>';
-                        echo '<td>' . date('M j, Y g:i A', strtotime($report['created_at'])) . '</td>';
-                        echo '</tr>';
-                    }
-                    
-                    echo '</tbody>';
-                    echo '</table>';
-                    echo '</div>';
-                    
-                    // Add JavaScript to show fallback after a timeout
-                    echo "<script>
-                        setTimeout(function() {
-                            var loadingElem = document.querySelector('#report-results .loading-indicator');
-                            var fallbackElem = document.getElementById('fallback-reports');
-                            
-                            if (loadingElem && fallbackElem && loadingElem.parentNode === document.getElementById('report-results')) {
-                                fallbackElem.style.display = 'block';
-                                console.log('Showing fallback reports display');
-                            }
-                        }, 5000); // Show fallback after 5 seconds if AJAX hasn't completed
-                    </script>";
-                }
-            } catch (PDOException $e) {
-                // Silently fail - we're just a fallback
-            }
-            ?>
         </div>
         
-        <p style="margin-top: 20px; font-size: 0.9em;">
-            <a href="test_reports.php" target="_blank" style="color: #666;">Troubleshoot Reports</a>
-        </p>
+        <?php
+        // Server-side reports fallback
+        try {
+            $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Get reports based on filter
+            if ($statusFilter === 'all') {
+                $sql = "SELECT r.*, 
+                        CASE 
+                            WHEN r.content_type = 'book' THEN (SELECT title FROM books WHERE book_id = r.content_id) 
+                            WHEN r.content_type = 'thread' THEN (SELECT title FROM threads WHERE thread_id = r.content_id)
+                            WHEN r.content_type = 'comment' THEN CONCAT('Comment #', r.content_id)
+                            ELSE CONCAT(r.content_type, ' #', r.content_id)
+                        END AS content_title
+                    FROM reports r
+                    ORDER BY r.created_at DESC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+            } else {
+                $sql = "SELECT r.*, 
+                        CASE 
+                            WHEN r.content_type = 'book' THEN (SELECT title FROM books WHERE book_id = r.content_id) 
+                            WHEN r.content_type = 'thread' THEN (SELECT title FROM threads WHERE thread_id = r.content_id)
+                            WHEN r.content_type = 'comment' THEN CONCAT('Comment #', r.content_id)
+                            ELSE CONCAT(r.content_type, ' #', r.content_id)
+                        END AS content_title
+                    FROM reports r
+                    WHERE r.status = :status
+                    ORDER BY r.created_at DESC";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':status', $statusFilter, PDO::PARAM_STR);
+                $stmt->execute();
+            }
+            
+            $reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // JavaScript to show the server-side reports if AJAX fails
+            echo "<script>
+                setTimeout(function() {
+                    if (document.querySelector('#report-results .loading-indicator')) {
+                        document.getElementById('fallback-reports').style.display = 'block';
+                        document.querySelector('#report-results .loading-indicator').style.display = 'none';
+                    }
+                }, 5000);
+            </script>";
+        ?>
         
-        <!-- Report details modal -->
-        <div id="report-details-modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>Report Details</h3>
-                <div id="report-detail-content">
-                    <!-- Report details will be loaded here -->
-                </div>
+        <div id="fallback-reports" style="display: none;">
+            <div class="alert" style="background-color: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                <p>Note: This is a server-rendered fallback. AJAX loading failed.</p>
             </div>
+            
+            <h3>PHP Fallback Report Display</h3>
+            
+            <?php if (count($reports) > 0): ?>
+            <div class="report-table-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Content</th>
+                            <th>Reporter</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($reports as $report): ?>
+                        <tr>
+                            <td><?php echo $report['report_id']; ?></td>
+                            <td>
+                                <?php echo htmlspecialchars($report['content_title']); ?>
+                                <div class="content-type-indicator" data-type="<?php echo $report['content_type']; ?>">
+                                    <?php echo ucfirst($report['content_type']); ?>
+                                </div>
+                            </td>
+                            <td><?php echo htmlspecialchars($report['reporter_username']); ?></td>
+                            <td><?php echo htmlspecialchars($report['reason']); ?></td>
+                            <td>
+                                <span class="status-indicator <?php echo $report['status']; ?>">
+                                    <?php echo ucfirst($report['status']); ?>
+                                </span>
+                            </td>
+                            <td><?php echo date('M j, Y g:i A', strtotime($report['created_at'])); ?></td>
+                            <td>
+                                <?php if ($report['content_type'] === 'book'): ?>
+                                <a href="book_detail.php?id=<?php echo $report['content_id']; ?>" class="view-button">View</a>
+                                <?php elseif ($report['content_type'] === 'thread'): ?>
+                                <a href="thread.php?id=<?php echo $report['content_id']; ?>" class="view-button">View</a>
+                                <?php elseif ($report['content_type'] === 'comment'): ?>
+                                <?php
+                                // Get thread_id for the comment
+                                $commentStmt = $pdo->prepare("SELECT thread_id FROM comments WHERE comment_id = ?");
+                                $commentStmt->execute([$report['content_id']]);
+                                $threadId = $commentStmt->rowCount() > 0 ? $commentStmt->fetch(PDO::FETCH_ASSOC)['thread_id'] : 0;
+                                ?>
+                                <a href="thread.php?id=<?php echo $threadId; ?>#comment-<?php echo $report['content_id']; ?>" class="view-button">View</a>
+                                <?php endif; ?>
+                                
+                                <?php if ($report['status'] === 'pending'): ?>
+                                <form action="admin_actions.php" method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="resolve_report">
+                                    <input type="hidden" name="report_id" value="<?php echo $report['report_id']; ?>">
+                                    <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                    <button type="submit" class="resolve-button">Resolve</button>
+                                </form>
+                                
+                                <form action="admin_actions.php" method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="dismiss_report">
+                                    <input type="hidden" name="report_id" value="<?php echo $report['report_id']; ?>">
+                                    <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                    <button type="submit" class="dismiss-button">Dismiss</button>
+                                </form>
+                                <?php endif; ?>
+                                
+                                <?php
+                                // Add delete content button based on content type
+                                if ($report['content_type'] === 'book'): ?>
+                                <form action="admin_actions.php" method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="delete_book">
+                                    <input type="hidden" name="book_id" value="<?php echo $report['content_id']; ?>">
+                                    <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                    <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this book?')">Delete Book</button>
+                                </form>
+                                <?php elseif ($report['content_type'] === 'thread'): ?>
+                                <form action="admin_actions.php" method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="delete_thread">
+                                    <input type="hidden" name="thread_id" value="<?php echo $report['content_id']; ?>">
+                                    <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                    <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this thread?')">Delete Thread</button>
+                                </form>
+                                <?php elseif ($report['content_type'] === 'comment'): ?>
+                                <form action="admin_actions.php" method="post" class="inline-form">
+                                    <input type="hidden" name="action" value="delete_comment">
+                                    <input type="hidden" name="comment_id" value="<?php echo $report['content_id']; ?>">
+                                    <input type="hidden" name="redirect" value="admin.php?status=<?php echo $statusFilter; ?>#reports">
+                                    <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this comment?')">Delete Comment</button>
+                                </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <p>No reports found.</p>
+            <?php endif; ?>
+            
+            <a href="test_api.php?action=get_reports" target="_blank" class="troubleshoot-link">Troubleshoot Reports</a>
+        </div>
+        <?php
+        } catch (PDOException $e) {
+            error_log("Error in reports fallback: " . $e->getMessage());
+        }
+        ?>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div id="report-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Report Details</h3>
+            <div id="report-details-content"></div>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // If URL has status parameter, activate the reports tab
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('status')) {
+        console.log('Status parameter found in URL, activating reports tab');
+        // Select the reports tab
+        const reportsTab = document.querySelector('[data-tab="reports"]');
+        if (reportsTab) {
+            // Select all tabs and remove active class
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabLinks.forEach(link => link.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Activate the reports tab
+            reportsTab.classList.add('active');
+            document.getElementById('reports').classList.add('active');
+            
+            // Update hash
+            window.location.hash = 'reports';
+            
+            // Scroll to the reports section
+            document.getElementById('reports').scrollIntoView();
+        }
+    }
+    
     // If tab hash is content-search, load the content overview
     if (window.location.hash === '#content-search') {
         setTimeout(() => {
@@ -581,6 +936,25 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             searchContent('');
         }, 100);
+    });
+    
+    // Set up JS URL handling for the filter links when using regular links for fallbacks
+    // This ensures that if AJAX is working, we still use it properly
+    const reportFilters = document.querySelectorAll('.report-filter');
+    reportFilters.forEach(filter => {
+        if (window.location.hash === '#reports') {
+            filter.addEventListener('click', function(e) {
+                if (typeof loadReports === 'function') {
+                    e.preventDefault();
+                    const status = this.getAttribute('data-status');
+                    // Remove active class from all filters
+                    reportFilters.forEach(f => f.classList.remove('active'));
+                    // Add active class to current filter
+                    this.classList.add('active');
+                    loadReports(status);
+                }
+            });
+        }
     });
 });
 </script>

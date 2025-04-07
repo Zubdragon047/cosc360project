@@ -1,10 +1,19 @@
 <?php
 session_start();
-require_once('protected/config.php');
 header('Content-Type: application/json');
+
+require_once('protected/config.php');
+
+// Enhanced error logging
+error_log("-------- Admin Handler Request --------");
+error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+error_log("GET params: " . print_r($_GET, true));
+error_log("Session username: " . (isset($_SESSION['username']) ? $_SESSION['username'] : 'not set'));
+error_log("Session type: " . (isset($_SESSION['type']) ? $_SESSION['type'] : 'not set'));
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['username']) || !isset($_SESSION['type']) || $_SESSION['type'] !== 'admin') {
+    error_log("Unauthorized access attempt to admin_handler.php");
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
 }

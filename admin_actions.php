@@ -263,8 +263,12 @@ try {
         case 'delete_comment':
             $comment_id = isset($_POST['comment_id']) ? $_POST['comment_id'] : '';
             
+            // Enhanced error logging for comment deletion
+            error_log("Delete comment request received for comment ID: " . $comment_id);
+            
             if (empty($comment_id)) {
                 $_SESSION['error_message'] = "Comment ID is required.";
+                error_log("Error: Comment ID is empty");
                 redirectBack();
             }
             
@@ -276,29 +280,43 @@ try {
             
             if ($stmt->rowCount() == 0) {
                 $_SESSION['error_message'] = "Comment not found.";
+                error_log("Error: Comment with ID " . $comment_id . " not found");
                 redirectBack();
             }
             
             $thread_id = $stmt->fetch(PDO::FETCH_ASSOC)['thread_id'];
+            error_log("Comment found in thread ID: " . $thread_id);
             
             try {
                 // Delete comment from database
                 $sql = "DELETE FROM comments WHERE comment_id = :comment_id";
                 $stmt = $pdo->prepare($sql);
                 $stmt->bindParam(':comment_id', $comment_id, PDO::PARAM_INT);
-                $stmt->execute();
                 
-                $_SESSION['success_message'] = "Comment has been deleted.";
+                $result = $stmt->execute();
+                
+                if ($result) {
+                    error_log("Comment " . $comment_id . " successfully deleted");
+                    $_SESSION['success_message'] = "Comment has been deleted.";
+                } else {
+                    error_log("Error: Failed to delete comment " . $comment_id);
+                    $_SESSION['error_message'] = "Failed to delete comment.";
+                }
                 
                 // Check if we need to redirect to the thread detail
                 $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+                error_log("Referrer: " . $referrer);
+                
                 if (strpos($referrer, 'thread.php') !== false) {
+                    error_log("Redirecting to thread.php?id=" . $thread_id);
                     header("Location: thread.php?id=" . $thread_id);
                     exit;
                 } else {
+                    error_log("Redirecting back using redirectBack()");
                     redirectBack();
                 }
             } catch (Exception $e) {
+                error_log("Exception during comment deletion: " . $e->getMessage());
                 $_SESSION['error_message'] = "Error deleting comment: " . $e->getMessage();
                 redirectBack();
             }
@@ -376,6 +394,12 @@ try {
  */
 function redirectBack() {
     global $returnToDetail;
+    
+    // Check if a custom redirect URL was provided
+    if (isset($_POST['redirect']) && !empty($_POST['redirect'])) {
+        header("Location: " . $_POST['redirect']);
+        exit;
+    }
     
     if ($returnToDetail) {
         header("Location: " . $_SERVER['HTTP_REFERER']);

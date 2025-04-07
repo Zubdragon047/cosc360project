@@ -86,6 +86,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Found report filters:', reportFilters.length);
         reportFilters.forEach(filter => {
             filter.addEventListener('click', function(e) {
+                // Only prevent default if this is a JavaScript-powered action
+                // If we're using regular links for the server-side fallback, let the link work normally
+                if (window.location.href.includes('status=')) {
+                    // We're in server-rendered mode, let the link work normally
+                    return;
+                }
+                
+                // Otherwise handle it with JavaScript
                 e.preventDefault();
                 const status = this.getAttribute('data-status');
                 console.log('Report filter clicked:', status);
@@ -635,22 +643,7 @@ function loadReports(status = 'all') {
     xhr.open('GET', url, true);
     
     xhr.onload = function() {
-        console.log('XHR status:', xhr.status);
-        console.log('Response text preview:', xhr.responseText.substring(0, 200));
-        
-        // First, check if our fallback PHP report display is already showing
-        const fallbackDisplay = document.getElementById('fallback-reports');
-        if (fallbackDisplay && fallbackDisplay.style.display === 'block') {
-            console.log('Fallback display is already active, skipping AJAX processing');
-            
-            // Still remove the loading indicator
-            const loadingIndicator = resultsContainer.querySelector('.loading-indicator');
-            if (loadingIndicator) loadingIndicator.remove();
-            
-            return;
-        }
-        
-        if (xhr.status === 200) {
+        if (xhr.status >= 200 && xhr.status < 300) {
             try {
                 const data = JSON.parse(xhr.responseText);
                 console.log('Parsed report data:', data);
@@ -661,8 +654,20 @@ function loadReports(status = 'all') {
                 
                 if (data.success) {
                     if (!data.reports || data.reports.length === 0) {
+                        // Hide any fallback that might be showing
+                        const fallbackReports = document.getElementById('fallback-reports');
+                        if (fallbackReports) {
+                            fallbackReports.style.display = 'none';
+                        }
+                        
                         resultsContainer.innerHTML = '<p>No reports found with selected status.</p>';
                         return;
+                    }
+                    
+                    // Hide any fallback that might be showing
+                    const fallbackReports = document.getElementById('fallback-reports');
+                    if (fallbackReports) {
+                        fallbackReports.style.display = 'none';
                     }
                     
                     // Create table for reports
@@ -694,64 +699,75 @@ function loadReports(status = 'all') {
                     
                     // Add event listeners to view report buttons
                     setupReportActionListeners();
+                    
                 } else {
-                    console.error('API returned error:', data.message);
+                    console.error('Error loading reports:', data.message);
+                    // Show error message and show fallback if available
                     resultsContainer.innerHTML = `
                         <div class="error-message">
-                            <p>Error: ${data.message || 'Unknown error loading reports'}</p>
-                            <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-                        </div>`;
+                            Failed to load reports: ${data.message || 'Unknown error'}
+                            <button class="retry-button" onclick="loadReports('${status}')">Retry</button>
+                        </div>
+                    `;
+                    
+                    // Show the fallback if it exists
+                    const fallbackReports = document.getElementById('fallback-reports');
+                    if (fallbackReports) {
+                        fallbackReports.style.display = 'block';
+                    }
                 }
             } catch (error) {
-                console.error('Error parsing JSON response:', error);
-                console.error('Raw response:', xhr.responseText);
+                console.error('Error parsing report data:', error);
+                // Show error message and show fallback if available
                 resultsContainer.innerHTML = `
                     <div class="error-message">
-                        <p>Error parsing server response. See console for details.</p>
-                        <pre style="max-height: 100px; overflow: auto; background: #f5f5f5; padding: 5px; font-size: 12px;">${xhr.responseText.substring(0, 300)}...</pre>
-                        <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-                    </div>`;
+                        Failed to parse report data: ${error.message}
+                        <button class="retry-button" onclick="loadReports('${status}')">Retry</button>
+                    </div>
+                `;
+                
+                // Show the fallback if it exists
+                const fallbackReports = document.getElementById('fallback-reports');
+                if (fallbackReports) {
+                    fallbackReports.style.display = 'block';
+                }
             }
         } else {
-            console.error('HTTP Error:', xhr.status, xhr.statusText);
+            console.error('XHR error:', xhr.status, xhr.statusText);
+            // Show error message and show fallback if available
             resultsContainer.innerHTML = `
                 <div class="error-message">
-                    <p>HTTP Error ${xhr.status}: ${xhr.statusText}</p>
-                    <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-                </div>`;
+                    Failed to load reports. Server returned status ${xhr.status}
+                    <button class="retry-button" onclick="loadReports('${status}')">Retry</button>
+                </div>
+            `;
+            
+            // Show the fallback if it exists
+            const fallbackReports = document.getElementById('fallback-reports');
+            if (fallbackReports) {
+                fallbackReports.style.display = 'block';
+            }
         }
     };
     
     xhr.onerror = function() {
-        console.error('Network error occurred');
+        console.error('Network error while loading reports');
+        // Show error message and show fallback if available
         resultsContainer.innerHTML = `
             <div class="error-message">
-                <p>Network error occurred. Please check your connection and try again.</p>
-                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-            </div>`;
+                Network error while loading reports. Please check your connection.
+                <button class="retry-button" onclick="loadReports('${status}')">Retry</button>
+            </div>
+        `;
+        
+        // Show the fallback if it exists
+        const fallbackReports = document.getElementById('fallback-reports');
+        if (fallbackReports) {
+            fallbackReports.style.display = 'block';
+        }
     };
     
-    xhr.timeout = 10000; // 10 seconds timeout
-    xhr.ontimeout = function() {
-        console.error('Request timed out');
-        resultsContainer.innerHTML = `
-            <div class="error-message">
-                <p>Request timed out. Server might be busy.</p>
-                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-            </div>`;
-    };
-    
-    // Send the request
-    try {
-        xhr.send();
-    } catch (error) {
-        console.error('Error sending request:', error);
-        resultsContainer.innerHTML = `
-            <div class="error-message">
-                <p>Error sending request: ${error.message}</p>
-                <button onclick="loadReports('${status}')" class="retry-button">Retry</button>
-            </div>`;
-    }
+    xhr.send();
 }
 
 // Function to set up event listeners for report action buttons
@@ -831,15 +847,19 @@ function initAdminPage() {
                 content.classList.remove('active');
                 if (content.id === tabId) {
                     content.classList.add('active');
-                    
-                    // Load content based on tab
-                    if (tabId === 'reports') {
-                        loadReports('all');
-                    } else if (tabId === 'content-search') {
-                        searchContent('');
-                    }
                 }
             });
+            
+            // Load content based on tab
+            if (tabId === 'reports') {
+                setTimeout(() => {
+                    loadReports('all');
+                }, 100);
+            } else if (tabId === 'content-search') {
+                setTimeout(() => {
+                    searchContent('');
+                }, 100);
+            }
             
             // Update URL hash for bookmarking/sharing
             window.location.hash = tabId;
@@ -853,36 +873,9 @@ function initAdminPage() {
         if (tabLink) {
             tabLink.click();
         }
-    }
-    
-    // Set up user search form
-    const userSearchForm = document.getElementById('user-search-form');
-    if (userSearchForm) {
-        userSearchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchTerm = document.getElementById('user-search').value;
-            searchUsers(searchTerm);
-        });
-    }
-    
-    // Set up book search form
-    const bookSearchForm = document.getElementById('book-search-form');
-    if (bookSearchForm) {
-        bookSearchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchTerm = document.getElementById('book-search').value;
-            searchBooks(searchTerm);
-        });
-    }
-    
-    // Set up thread search form
-    const threadSearchForm = document.getElementById('thread-admin-search-form');
-    if (threadSearchForm) {
-        threadSearchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchTerm = document.getElementById('thread-admin-search').value;
-            searchThreads(searchTerm);
-        });
+    } else {
+        // Default to first tab if no hash
+        tabLinks[0].click();
     }
     
     // Set up report filters
@@ -895,36 +888,10 @@ function initAdminPage() {
                 loadReports(status);
             });
         });
-        
-        // Load initial reports if we're on the reports tab
-        if (document.querySelector('.tab-link[data-tab="reports"].active')) {
-            loadReports('all');
-        }
     }
-    
-    // Modal close button handling
-    const modalCloseButtons = document.querySelectorAll('.modal .close');
-    modalCloseButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) modal.style.display = 'none';
-        });
-    });
-    
-    // Close modals when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
-    });
-    
-    console.log('Admin page initialization complete');
 }
 
-// Call init function when DOM is loaded
-document.addEventListener('DOMContentLoaded', initAdminPage);
-
-// Also call initAdminPage immediately if the DOM is already loaded
-if (document.readyState === 'interactive' || document.readyState === 'complete') {
+// Add window load event to initialize page 
+window.addEventListener('load', function() {
     initAdminPage();
-} 
+}); 
