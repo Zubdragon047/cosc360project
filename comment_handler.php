@@ -34,6 +34,13 @@ try {
         $stmt->bindParam(':last_id', $last_id, PDO::PARAM_INT);
         $stmt->execute();
         
+        // Debug logging for admin status
+        if (isset($_SESSION['type']) && $_SESSION['type'] === 'admin') {
+            error_log('Admin user is viewing comments');
+        } else {
+            error_log('Non-admin user is viewing comments. Session type: ' . (isset($_SESSION['type']) ? $_SESSION['type'] : 'not set'));
+        }
+        
         $comments = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $comments[] = [
@@ -41,7 +48,8 @@ try {
                 'username' => $row['username'],
                 'content' => $row['content'],
                 'created_at' => $row['created_at'],
-                'profilepic' => $row['profilepic']
+                'profilepic' => $row['profilepic'],
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ];
         }
         
@@ -123,7 +131,8 @@ try {
                 'username' => $comment['username'],
                 'content' => $comment['content'],
                 'created_at' => $comment['created_at'],
-                'profilepic' => $comment['profilepic']
+                'profilepic' => $comment['profilepic'],
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ]
         ]);
         exit;

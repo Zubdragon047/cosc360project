@@ -23,7 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $_SESSION['firstname'] = $row['firstname'];
                     $_SESSION['lastname'] = $row['lastname'];
                     $_SESSION['profilepic'] = $row['profilepic'];
-                    header('Location: dashboard.php');
+                    $_SESSION['type'] = $row['type'];
+                    
+                    // Redirect admin users to admin dashboard, regular users to dashboard
+                    if ($row['type'] === 'admin') {
+                        header('Location: admin.php');
+                    } else {
+                        header('Location: dashboard.php');
+                    }
                     die();
                 } else {
                     echo "Wrong password, redirecting to login to try again...";
