@@ -97,3 +97,24 @@ An online platform that allows users to exchange books with one another. Users c
 4. Configure database connection in protected/config.php
 5. Ensure file permissions are set correctly for uploaded images
 6. Access the site through your web server
+
+## Test Rendering on Server
+
+
+Ensuring the site is rendered and functions properly on the school server.
+
+1. Render pages for unregistered users.
+![test-unreg](https://github.com/user-attachments/assets/3ef0d44a-0ef0-4361-93e8-10509f78aea7)
+
+3. Render pages for regular users.
+![test-user](https://github.com/user-attachments/assets/daf3892f-38b7-4d4b-b44c-def85de473f2)
+
+5. Render pages for admin users.
+![test-admin](https://github.com/user-attachments/assets/0478c730-7b9d-4015-83ab-b4d68247ba20)
+
+7. User image displays above nav bar.
+![test-profilepic](https://github.com/user-attachments/assets/0b68802c-be98-47ef-babd-96efa0924571)
+
+9. Book images display on browse page.
+![test-bookpics](https://github.com/user-attachments/assets/f5702776-ddda-4ec5-9049-d7b619247262)
+
