@@ -42,6 +42,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <a href="home.php"><button>Home</button></a>
                 <a href="about.php"><button>About</button></a>
                 <a href="browse.php"><button>Browse</button></a>
+                <a href="hot_threads.php"><button>Hot Threads</button></a>
                 <?php if (isset($_SESSION['username'])): ?>
                     <a href="dashboard.php"><button>Dashboard</button></a>
                     <a href="threads.php"><button>Discussions</button></a>

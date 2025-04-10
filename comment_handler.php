@@ -23,7 +23,7 @@ try {
         $last_id = isset($_GET['last_id']) ? $_GET['last_id'] : 0;
         
         // Get comments for the thread
-        $sql = "SELECT c.*, u.profilepic
+        $sql = "SELECT c.*, u.profilepic 
                 FROM comments c
                 JOIN users u ON c.username = u.username
                 WHERE c.thread_id = :thread_id AND c.comment_id > :last_id
@@ -49,6 +49,7 @@ try {
                 'content' => $row['content'],
                 'created_at' => $row['created_at'],
                 'profilepic' => $row['profilepic'],
+                'parent_id' => $row['parent_id'],
                 'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ];
         }
@@ -80,6 +81,7 @@ try {
         $thread_id = $data['thread_id'];
         $content = $data['content'];
         $username = $_SESSION['username'];
+        $parent_id = isset($data['parent_id']) && is_numeric($data['parent_id']) ? $data['parent_id'] : null;
         
         // Check if thread exists
         $sql = "SELECT thread_id FROM threads WHERE thread_id = :thread_id";
@@ -93,18 +95,62 @@ try {
             exit;
         }
         
+        // If parent_id is provided, check if it exists
+        if ($parent_id) {
+            $sql = "SELECT comment_id FROM comments WHERE comment_id = :parent_id AND thread_id = :thread_id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':parent_id', $parent_id, PDO::PARAM_INT);
+            $stmt->bindParam(':thread_id', $thread_id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            if ($stmt->rowCount() == 0) {
+                $parent_id = null; // Parent comment not found or not in this thread
+            }
+        }
+        
         // Insert the comment
-        $sql = "INSERT INTO comments (thread_id, username, content) 
-                VALUES (:thread_id, :username, :content)";
-        $stmt = $pdo->prepare($sql);
+        try {
+            $sql = "INSERT INTO comments (thread_id, username, content, parent_id) 
+                    VALUES (:thread_id, :username, :content, :parent_id)";
+            $stmt = $pdo->prepare($sql);
+            
+            $params = [
+                'thread_id' => $thread_id,
+                'username' => $username,
+                'content' => $content,
+                'parent_id' => $parent_id
+            ];
+            
+            $stmt->execute($params);
+        } catch (PDOException $e) {
+            // If parent_id column doesn't exist, try without it
+            if (strpos($e->getMessage(), "parent_id") !== false) {
+                $sql = "INSERT INTO comments (thread_id, username, content) 
+                        VALUES (:thread_id, :username, :content)";
+                $stmt = $pdo->prepare($sql);
+                
+                $params = [
+                    'thread_id' => $thread_id,
+                    'username' => $username,
+                    'content' => $content
+                ];
+                
+                $stmt->execute($params);
+                
+                // Try to add the parent_id column for future use
+                try {
+                    $alterSql = "ALTER TABLE comments ADD COLUMN parent_id INT DEFAULT NULL";
+                    $pdo->exec($alterSql);
+                    error_log("Added parent_id column to comments table");
+                } catch (PDOException $alterEx) {
+                    error_log("Error adding parent_id column: " . $alterEx->getMessage());
+                }
+            } else {
+                // Re-throw if it's a different error
+                throw $e;
+            }
+        }
         
-        $params = [
-            'thread_id' => $thread_id,
-            'username' => $username,
-            'content' => $content
-        ];
-        
-        $stmt->execute($params);
         $comment_id = $pdo->lastInsertId();
         
         // Update the thread's updated_at timestamp
@@ -114,15 +160,15 @@ try {
         $stmt->execute();
         
         // Get the comment details to return
-        $sql = "SELECT c.*, u.profilepic
-                FROM comments c
-                JOIN users u ON c.username = u.username
-                WHERE c.comment_id = :comment_id";
+        $sql = "SELECT c.*, u.profilepic FROM comments c JOIN users u ON c.username = u.username WHERE c.comment_id = :comment_id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':comment_id', $comment_id, PDO::PARAM_INT);
         $stmt->execute();
         
         $comment = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Check if parent_id exists in the result
+        $parentIdValue = isset($comment['parent_id']) ? $comment['parent_id'] : null;
         
         echo json_encode([
             'success' => true, 
@@ -132,6 +178,7 @@ try {
                 'content' => $comment['content'],
                 'created_at' => $comment['created_at'],
                 'profilepic' => $comment['profilepic'],
+                'parent_id' => $parentIdValue,
                 'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
             ]
         ]);

@@ -94,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         loadingElement.remove();
                     }
                     
+                    // Clear out the container if initializing
+                    commentsContainer.innerHTML = '';
+                    
                     // If no comments, show a message
                     if (data.comments.length === 0) {
                         const noCommentsElement = document.createElement('p');
@@ -110,12 +113,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         noCommentsElement.remove();
                     }
                     
-                    // Append new comments
+                    // Render comments in flat structure
                     data.comments.forEach(comment => {
-                        appendComment(comment, !isInitialLoad);
-                        // Update the last comment ID
-                        if (comment.id > lastCommentId) {
-                            lastCommentId = comment.id;
+                        if (!document.querySelector(`[data-comment-id="${comment.id}"]`)) {
+                            appendComment(comment, !isInitialLoad, commentsContainer);
+                            
+                            // Update the last comment ID
+                            if (comment.id > lastCommentId) {
+                                lastCommentId = comment.id;
+                            }
                         }
                     });
                 }
@@ -131,8 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
     
-    // Function to append a comment to the comments container
-    function appendComment(comment, isNew) {
+    // Function to create a comment element
+    function createCommentElement(comment, isNew) {
         const commentElement = document.createElement("div");
         commentElement.className = "comment";
         commentElement.id = "comment-" + comment.id;
@@ -179,10 +185,20 @@ document.addEventListener("DOMContentLoaded", () => {
         
         commentElement.innerHTML = commentHTML;
         
+        // Add event listeners for report links
+        setupCommentEventListeners(commentElement);
+        
+        return commentElement;
+    }
+    
+    // Function to append a comment to a container
+    function appendComment(comment, isNew, container) {
+        const commentElement = createCommentElement(comment, isNew);
+        
         // Check if the comment already exists to avoid duplicates
         const existingComment = document.querySelector(`[data-comment-id="${comment.id}"]`);
         if (!existingComment) {
-            commentsContainer.appendChild(commentElement);
+            container.appendChild(commentElement);
             
             // If it's a new comment (not initial load), highlight it briefly
             if (isNew) {
@@ -190,21 +206,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     commentElement.classList.remove("new-comment");
                 }, 3000);
             }
-            
-            // Add event listener to new report links
-            const reportLink = commentElement.querySelector('.report-link');
-            if (reportLink) {
-                reportLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const contentType = this.getAttribute('data-type');
-                    const contentId = this.getAttribute('data-id');
-                    
-                    document.getElementById('content_type').value = contentType;
-                    document.getElementById('content_id').value = contentId;
-                    
-                    document.getElementById('reportModal').style.display = 'block';
-                });
-            }
+        }
+    }
+    
+    // Function to set up event listeners for comment elements
+    function setupCommentEventListeners(commentElement) {
+        // Add event listener to report link
+        const reportLink = commentElement.querySelector('.report-link');
+        if (reportLink) {
+            reportLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const contentType = this.getAttribute('data-type');
+                const contentId = this.getAttribute('data-id');
+                
+                document.getElementById('content_type').value = contentType;
+                document.getElementById('content_id').value = contentId;
+                
+                document.getElementById('reportModal').style.display = 'block';
+            });
         }
     }
 }); 
