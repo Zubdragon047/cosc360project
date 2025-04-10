@@ -450,6 +450,131 @@ include('includes/header.php');
         .view-content-btn:hover {
             background-color: #0b7dda;
         }
+
+        .detail-label .thread-link {
+            color: #0b7dda;
+            text-decoration: underline;
+        }
+        
+        /* Usage Reports Tab Styling */
+        .usage-report-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .filter-select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: white;
+            min-width: 150px;
+        }
+        
+        .generate-button {
+            padding: 9px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .generate-button:hover {
+            background-color: #388E3C;
+        }
+        
+        .report-visualization {
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        #chart-container {
+            width: 100%;
+            height: 400px;
+        }
+        
+        #report-data-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        #report-title {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f44336;
+            color: #333;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table th {
+            background-color: #e0e0e0;
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #bbb;
+        }
+        
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .count-cell {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .trend-positive {
+            color: #4CAF50;
+        }
+        
+        .trend-negative {
+            color: #f44336;
+        }
+        
+        .trend-neutral {
+            color: #757575;
+        }
     </style>
     
     <?php if (isset($_SESSION['success_message'])): ?>
@@ -463,11 +588,13 @@ include('includes/header.php');
     <?php endif; ?>
     
     <div class="admin-tabs">
-        <button class="tab-link active" data-tab="users">User Management</button>
+        <button class="tab-link" data-tab="overview">Dashboard</button>
+        <button class="tab-link" data-tab="users">User Management</button>
         <button class="tab-link" data-tab="books">Book Management</button>
         <button class="tab-link" data-tab="threads">Discussion Management</button>
         <button class="tab-link" data-tab="reports">Reported Content</button>
         <button class="tab-link" data-tab="content-search">Content Overview</button>
+        <button class="tab-link" data-tab="usage-reports">Usage Reports</button>
     </div>
     
     <div id="users" class="tab-content active">
@@ -1036,6 +1163,53 @@ include('includes/header.php');
             <div id="report-detail-content"></div>
         </div>
     </div>
+
+    <!-- Usage Reports Tab -->
+    <div id="usage-reports" class="tab-content">
+        <h3>Site Usage Reports</h3>
+        
+        <div class="usage-report-filters">
+            <div class="filter-group">
+                <label for="date-range">Date Range:</label>
+                <select id="date-range" class="filter-select">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 3 months</option>
+                    <option value="180">Last 6 months</option>
+                    <option value="365">Last year</option>
+                    <option value="all">All time</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="report-type">Report Type:</label>
+                <select id="report-type" class="filter-select">
+                    <option value="registrations">User Registrations</option>
+                    <option value="content" selected>Content Creation</option>
+                    <option value="activity">User Activity</option>
+                    <option value="popular">Content Popularity</option>
+                </select>
+            </div>
+            
+            <button id="generate-report" class="generate-button">Generate Report</button>
+        </div>
+        
+        <div class="report-visualization">
+            <div id="chart-container" style="width: 100%; height: 400px; position: relative;">
+                <canvas id="report-chart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
+        
+        <div id="report-data-container">
+            <h4 id="report-title">Content Creation (Last 30 days)</h4>
+            <div class="loading-indicator" id="report-loading" style="display: none;">
+                Loading report data...
+            </div>
+            <div id="report-error" class="error-message" style="display: none;"></div>
+            <button id="debug-report" style="margin-bottom: 10px; background-color: #666; color: white; padding: 5px 10px; border: none; cursor: pointer;">Debug Report</button>
+            <div id="report-table-container"></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1098,7 +1272,93 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Explicitly add handler for generate report button
+    const generateReportBtn = document.getElementById('generate-report');
+    if (generateReportBtn) {
+        generateReportBtn.addEventListener('click', function() {
+            const dateRange = document.getElementById('date-range').value;
+            const reportType = document.getElementById('report-type').value;
+            
+            // Check if generateReport function exists
+            if (typeof generateReport === 'function') {
+                generateReport(dateRange, reportType);
+            } else {
+                console.error('generateReport function not found!');
+                alert('Error: Report generation function not available. Please refresh the page and try again.');
+            }
+        });
+    }
+    
+    // If URL hash is usage-reports, load the reports tab
+    if (window.location.hash === '#usage-reports') {
+        setTimeout(() => {
+            const dateRange = document.getElementById('date-range').value;
+            const reportType = document.getElementById('report-type').value;
+            if (typeof generateReport === 'function') {
+                generateReport(dateRange, reportType);
+            }
+        }, 300);
+    }
+    
+    // Add debug button handler
+    const debugReportBtn = document.getElementById('debug-report');
+    if (debugReportBtn) {
+        debugReportBtn.addEventListener('click', function() {
+            console.log('Debug report button clicked');
+            
+            // Check if the global function exists
+            if (typeof window.generateReport === 'function') {
+                console.log('Using window.generateReport');
+                const dateRange = document.getElementById('date-range').value;
+                const reportType = document.getElementById('report-type').value;
+                window.generateReport(dateRange, reportType);
+            } else if (typeof generateReport === 'function') {
+                console.log('Using local generateReport');
+                const dateRange = document.getElementById('date-range').value;
+                const reportType = document.getElementById('report-type').value;
+                generateReport(dateRange, reportType);
+            } else {
+                console.error('generateReport function not available');
+                alert('Error: Report generation function not available');
+                
+                // Make a direct API call
+                const dateRange = document.getElementById('date-range').value;
+                const reportType = document.getElementById('report-type').value;
+                const url = `admin_handler.php?action=get_usage_report&report_type=${reportType}&date_range=${dateRange}`;
+                
+                console.log('Trying direct API call to:', url);
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('API response:', data);
+                        document.getElementById('report-table-container').innerHTML = 
+                            '<pre style="background:#f5f5f5; padding:10px; overflow:auto;">' + 
+                            JSON.stringify(data, null, 2) + 
+                            '</pre>';
+                    })
+                    .catch(error => {
+                        console.error('API call error:', error);
+                        document.getElementById('report-table-container').innerHTML = 
+                            '<div class="error-message">Error: ' + error.message + '</div>';
+                    });
+            }
+        });
+    }
 });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Verify Chart.js is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Chart.js loaded?', typeof Chart !== 'undefined');
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js failed to load');
+        } else {
+            console.log('Chart.js loaded successfully');
+        }
+    });
 </script>
 
 <?php

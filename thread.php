@@ -22,6 +22,25 @@ try {
     $pdo = new PDO(DBCONNSTRING, DBUSER, DBPASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
+    // Increment views count - check if views column exists
+    try {
+        $checkStmt = $pdo->prepare("SHOW COLUMNS FROM threads LIKE 'views'");
+        $checkStmt->execute();
+        if ($checkStmt->rowCount() == 0) {
+            // Views column doesn't exist, add it
+            $alterStmt = $pdo->prepare("ALTER TABLE threads ADD COLUMN views INT DEFAULT 0");
+            $alterStmt->execute();
+        }
+        
+        // Update views
+        $updateViewsStmt = $pdo->prepare("UPDATE threads SET views = views + 1 WHERE thread_id = :thread_id");
+        $updateViewsStmt->bindParam(':thread_id', $thread_id);
+        $updateViewsStmt->execute();
+    } catch (PDOException $e) {
+        // Just log error and continue, view count isn't critical functionality
+        error_log("Error updating thread views: " . $e->getMessage());
+    }
+    
     // Get thread details
     $sql = "SELECT * FROM threads WHERE thread_id = :thread_id";
     $stmt = $pdo->prepare($sql);

@@ -228,7 +228,7 @@ h3 {
     gap: 2em;
     .form-group {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
     }
     #search-error-message {color: red;}
@@ -1670,4 +1670,33 @@ h3 {
     border-radius: 4px;
     margin-top: 15px;
     font-size: 0.9em;
+}
+
+.browse-search-form .form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.browse-search-form input[type="text"] {
+    width: 400px;
+    padding: 4px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 20px; /* Add significant space between input and button */
+    height: 24px; /* Set a specific height */
+    box-sizing: border-box;
+}
+
+.browse-search-form .submit {
+    padding: 4px 15px;
+    background-color: rgb(29, 157, 189);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 24px; /* Match height of input field */
+    line-height: 1; /* Adjust line height for better text centering */
+    font-size: 14px;
 }
