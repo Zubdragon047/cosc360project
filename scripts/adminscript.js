@@ -1115,9 +1115,6 @@ function initUsageReports() {
         let titleText = '';
         
         switch (reportType) {
-            case 'registrations':
-                titleText = 'User Registrations';
-                break;
             case 'content':
                 titleText = 'Content Creation';
                 break;
@@ -1190,9 +1187,6 @@ function initUsageReports() {
                     
                     // Process data based on report type
                     switch (reportType) {
-                        case 'registrations':
-                            renderRegistrationsReport(data);
-                            break;
                         case 'content':
                             renderContentReport(data);
                             break;
@@ -1224,86 +1218,6 @@ function initUsageReports() {
         }
     }
     
-    // Function to render registrations report
-    function renderRegistrationsReport(data) {
-        // Create chart for registrations
-        const registrations = data.data || [];
-        const chartLabels = registrations.map(item => formatDate(item.date));
-        const chartData = registrations.map(item => parseInt(item.count));
-        
-        createChart('Registrations over time', chartLabels, [
-            {
-                label: 'New Users',
-                data: chartData,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgb(54, 162, 235)',
-                borderWidth: 1
-            }
-        ]);
-        
-        // Create table for registrations data
-        const totals = data.totals || { current_period: 0, previous_period: 0 };
-        const percentChange = totals.previous_period > 0 
-            ? ((totals.current_period - totals.previous_period) / totals.previous_period * 100).toFixed(2)
-            : 'N/A';
-        
-        let tableHTML = `
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Metric</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Total New Users</td>
-                        <td class="count-cell">${totals.current_period}</td>
-                    </tr>
-                    <tr>
-                        <td>Previous Period</td>
-                        <td class="count-cell">${totals.previous_period}</td>
-                    </tr>
-                    <tr>
-                        <td>Change</td>
-                        <td class="count-cell ${getChangeClass(percentChange)}">
-                            ${percentChange === 'N/A' ? 'N/A' : percentChange + '%'}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <h4 style="margin-top: 20px;">Daily Registrations</h4>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>New Users</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        if (registrations.length === 0) {
-            tableHTML += '<tr><td colspan="2">No registration data available for this period</td></tr>';
-        } else {
-            registrations.forEach(reg => {
-                tableHTML += `
-                    <tr>
-                        <td>${formatDate(reg.date)}</td>
-                        <td class="count-cell">${reg.count}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        tableHTML += '</tbody></table>';
-        
-        if (reportTableContainer) {
-            reportTableContainer.innerHTML = tableHTML;
-        }
-    }
-    
     // Function to render content creation report
     function renderContentReport(data) {
         const contentData = data.data || { books: [], threads: [], comments: [] };
@@ -1313,9 +1227,9 @@ function initUsageReports() {
         ['books', 'threads', 'comments'].forEach(type => {
             contentData[type].forEach(item => {
                 allDates.add(item.date);
+            });
         });
-    });
-    
+        
         // Convert to array and sort
         const sortedDates = Array.from(allDates).sort();
         
@@ -1334,22 +1248,22 @@ function initUsageReports() {
             {
                 label: 'Books',
                 data: booksData,
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',  // Blue
+                borderColor: 'rgb(54, 162, 235)',
                 borderWidth: 1
             },
             {
                 label: 'Threads',
                 data: threadsData,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',  // Teal
+                borderColor: 'rgb(75, 192, 192)',
                 borderWidth: 1
             },
             {
                 label: 'Comments',
                 data: commentsData,
-                backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(153, 102, 255, 0.5)',  // Purple
+                borderColor: 'rgb(153, 102, 255)',
                 borderWidth: 1
             }
         ]);
@@ -1426,7 +1340,7 @@ function initUsageReports() {
         
         if (sortedDates.length === 0) {
             tableHTML += '<tr><td colspan="5">No content creation data available for this period</td></tr>';
-    } else {
+        } else {
             sortedDates.forEach(date => {
                 const books = booksMap.get(date) || 0;
                 const threads = threadsMap.get(date) || 0;
@@ -1460,21 +1374,21 @@ function initUsageReports() {
         // Create chart for activity metrics
         createChart('Activity Distribution', ['Books', 'Threads', 'Comments'], [
             {
-                label: 'Count',
+                label: 'Content Items',
                 data: [
                     totals.book_count || 0,
                     totals.thread_count || 0, 
                     totals.comment_count || 0
                 ],
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.5)',
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(75, 192, 192, 0.5)'
+                    'rgba(54, 162, 235, 0.5)',  // Blue for consistency
+                    'rgba(75, 192, 192, 0.5)',  // Teal
+                    'rgba(153, 102, 255, 0.5)'  // Purple instead of red
                 ],
                 borderColor: [
-                    'rgb(255, 99, 132)',
                     'rgb(54, 162, 235)',
-                    'rgb(75, 192, 192)'
+                    'rgb(75, 192, 192)',
+                    'rgb(153, 102, 255)'
                 ],
                 borderWidth: 1
             }
@@ -1563,15 +1477,15 @@ function initUsageReports() {
                 {
                     label: 'Views',
                     data: bookViews,
-                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',  // Blue for consistency
+                    borderColor: 'rgb(54, 162, 235)',
                     borderWidth: 1
                 },
                 {
                     label: 'Comments',
                     data: bookComments,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',  // Teal for consistency
+                    borderColor: 'rgb(75, 192, 192)',
                     borderWidth: 1
                 }
             ], 'bar');
@@ -1723,7 +1637,13 @@ function initUsageReports() {
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,  // No decimal places
+                                callback: function(value) {
+                                    return Math.round(value); // Return rounded values
+                                }
+                            }
                         }
                     }
                 }

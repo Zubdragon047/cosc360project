@@ -588,7 +588,6 @@ include('includes/header.php');
     <?php endif; ?>
     
     <div class="admin-tabs">
-        <button class="tab-link" data-tab="overview">Dashboard</button>
         <button class="tab-link" data-tab="users">User Management</button>
         <button class="tab-link" data-tab="books">Book Management</button>
         <button class="tab-link" data-tab="threads">Discussion Management</button>
@@ -1184,7 +1183,6 @@ include('includes/header.php');
             <div class="filter-group">
                 <label for="report-type">Report Type:</label>
                 <select id="report-type" class="filter-select">
-                    <option value="registrations">User Registrations</option>
                     <option value="content" selected>Content Creation</option>
                     <option value="activity">User Activity</option>
                     <option value="popular">Content Popularity</option>
@@ -1357,6 +1355,15 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Chart.js failed to load');
         } else {
             console.log('Chart.js loaded successfully');
+        }
+        
+        // Make sure "users" tab is set as active by default when no hash is present
+        if (!window.location.hash) {
+            const userTab = document.querySelector('.tab-link[data-tab="users"]');
+            if (userTab) {
+                userTab.classList.add('active');
+                document.getElementById('users').classList.add('active');
+            }
         }
     });
 </script>
