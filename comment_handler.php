@@ -50,7 +50,8 @@ try {
                 'created_at' => $row['created_at'],
                 'profilepic' => $row['profilepic'],
                 'parent_id' => $row['parent_id'],
-                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin',
+                'is_comment_owner' => isset($_SESSION['username']) && $_SESSION['username'] === $row['username']
             ];
         }
         
@@ -179,7 +180,8 @@ try {
                 'created_at' => $comment['created_at'],
                 'profilepic' => $comment['profilepic'],
                 'parent_id' => $parentIdValue,
-                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin'
+                'is_admin_viewing' => isset($_SESSION['type']) && $_SESSION['type'] === 'admin',
+                'is_comment_owner' => isset($_SESSION['username']) && $_SESSION['username'] === $comment['username']
             ]
         ]);
         exit;
