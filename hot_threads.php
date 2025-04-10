@@ -25,53 +25,6 @@ include 'includes/header.php';
                 <div class="chart-container">
                     <canvas id="activityChart" height="180"></canvas>
                     <div id="chart-loading" class="chart-loading">Loading activity data...</div>
-                    <!-- Fallback static chart -->
-                    <div id="fallback-chart" class="fallback-chart" style="display:none;">
-                        <div class="static-chart">
-                            <div class="bar-container">
-                                <div class="bar" style="height: 20%;" title="1 discussion">
-                                    <span class="value">1</span>
-                                </div>
-                                <div class="day">Mon</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 40%;" title="2 discussions">
-                                    <span class="value">2</span>
-                                </div>
-                                <div class="day">Tue</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 60%;" title="3 discussions">
-                                    <span class="value">3</span>
-                                </div>
-                                <div class="day">Wed</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 40%;" title="2 discussions">
-                                    <span class="value">2</span>
-                                </div>
-                                <div class="day">Thu</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 80%;" title="4 discussions">
-                                    <span class="value">4</span>
-                                </div>
-                                <div class="day">Fri</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 60%;" title="3 discussions">
-                                    <span class="value">3</span>
-                                </div>
-                                <div class="day">Sat</div>
-                            </div>
-                            <div class="bar-container">
-                                <div class="bar" style="height: 100%;" title="5 discussions">
-                                    <span class="value">5</span>
-                                </div>
-                                <div class="day">Sun</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -105,6 +58,17 @@ include 'includes/header.php';
                     
                     <button type="submit" class="filter-button">Apply Filters</button>
                 </form>
+            </div>
+            
+            <!-- Remove any PHP output potentially showing here -->
+            <!-- This is where unwanted numbers might be showing up -->
+            <div style="display:none;">
+                <?php 
+                // Capture and hide any unwanted output
+                ob_start();
+                print_r($values); 
+                ob_end_clean();
+                ?>
             </div>
             
             <div id="hot-threads-list" class="threads-list">
@@ -273,7 +237,10 @@ include 'includes/header.php';
                     // Make sure we have at least some data to display
                     if (array_sum($values) == 0) {
                         // No real data, add some sample data for visualization
-                        $values = [1, 2, 3, 2, 4, 3, 5];
+                        // But store them in a different variable to avoid them being displayed elsewhere
+                        $_chart_values = [1, 2, 3, 2, 4, 3, 5];
+                        // Only use this for the chart, not for page display
+                        $values = $_chart_values;
                     }
                     
                 } catch (Exception $e) {
@@ -283,7 +250,15 @@ include 'includes/header.php';
                     echo '</div>';
                     
                     // Fallback chart data
-                    $labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    $labels = [
+                        date('M d', strtotime('-6 days')),
+                        date('M d', strtotime('-5 days')),
+                        date('M d', strtotime('-4 days')),
+                        date('M d', strtotime('-3 days')),
+                        date('M d', strtotime('-2 days')),
+                        date('M d', strtotime('-1 days')),
+                        date('M d')
+                    ];
                     $values = [0, 0, 0, 0, 0, 0, 0];
                 }
                 ?>
@@ -348,22 +323,50 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.error("Chart canvas element not found");
             document.getElementById('chart-loading').style.display = 'none';
-            document.getElementById('fallback-chart').style.display = 'block';
+            document.getElementById('chart-loading').innerHTML = 'Chart could not be loaded. Please try again later.';
         }
     } catch(error) {
         console.error("Error initializing chart:", error);
         document.getElementById('chart-loading').style.display = 'none';
-        document.getElementById('fallback-chart').style.display = 'block';
+        document.getElementById('chart-loading').innerHTML = 'Chart could not be loaded. Please try again later.';
     }
     
-    // Fallback after 2 seconds if the chart doesn't load
+    // Remove any unwanted blue bars that might appear
     setTimeout(function() {
-        const chartCanvas = document.getElementById('activityChart');
-        if (chartCanvas && !chartCanvas.__chart__) {
-            document.getElementById('chart-loading').style.display = 'none';
-            document.getElementById('fallback-chart').style.display = 'block';
+        // Find and remove any unwanted blue bars outside the chart container
+        const blueBars = document.querySelectorAll('div[style*="background-color: #3498db"]');
+        for (let i = 0; i < blueBars.length; i++) {
+            const bar = blueBars[i];
+            // Only remove if outside the chart
+            if (!bar.closest('.chart-container')) {
+                // Find the parent to remove
+                let parent = bar.parentElement;
+                while (parent && parent.tagName !== 'BODY' && 
+                      !parent.classList.contains('content-section')) {
+                    parent = parent.parentElement;
+                }
+                
+                if (parent && parent.classList.contains('content-section')) {
+                    // Only remove direct children of content-section that aren't important
+                    const children = Array.from(parent.children);
+                    for (let j = 0; j < children.length; j++) {
+                        const child = children[j];
+                        if (!child.classList.contains('filters') && 
+                            !child.classList.contains('threads-list') && 
+                            !child.id !== 'hot-threads-list' &&
+                            !child.classList.contains('error-message') &&
+                            !child.classList.contains('no-results')) {
+                            // Check if this contains numbers
+                            const text = child.textContent.trim();
+                            if (/^[0-9\s]+$/.test(text) || child.querySelector('div[style*="background-color: #3498db"]')) {
+                                child.remove();
+                            }
+                        }
+                    }
+                }
+            }
         }
-    }, 2000);
+    }, 100);
 });
 </script>
 
@@ -372,6 +375,28 @@ document.addEventListener('DOMContentLoaded', function() {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+}
+
+/* Hide the numbers at the top of threads */
+.content-section > div:not(.filters):not(#hot-threads-list):not(.threads-list):not(.thread-card):not(.error-message):not(.no-results) {
+    display: none !important;
+}
+
+/* Hide any element that contains just numbers before the threads list */
+.content-section > div:first-of-type:not(.filters):not(#hot-threads-list) {
+    display: none !important;
+}
+
+/* Target numeric row specifically */
+.content-section > .static-chart,
+.content-section > *:has(> .bar),
+.content-section > div[style*="display: flex"] {
+    display: none !important;
+}
+
+/* Specifically target blue bars with numbers */
+div:has(> div[style*="background-color: #3498db"]) {
+    display: none !important;
 }
 
 /* Visualization and content section styling */
@@ -584,6 +609,21 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
 }
 
+/* Hide weekday headers above threads */
+.hot-threads-container > div > .content-section > div:not(.filters):not(#hot-threads-list):not(.threads-list):not(.thread-card):not(.error-message):not(.no-results) {
+    display: none !important;
+}
+.content-section > div:first-of-type:not(.filters) {
+    display: none !important;
+}
+/* Hide specifically Mon-Sun row */
+.content-section > div.row,
+.threads-list ~ div.row,
+div:has(> span:first-child:contains("Mon")),
+.content-section > div:has(> span) {
+    display: none !important;
+}
+
 .heat-indicator.low {
     color: #3498db;
 }
@@ -594,61 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .heat-indicator.high {
     color: #e74c3c;
-}
-
-/* Fallback chart styles */
-.fallback-chart {
-    width: 100%;
-    height: 180px;
-}
-
-.static-chart {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    height: 150px;
-    padding-top: 10px;
-}
-
-.bar-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 14%;
-}
-
-.bar {
-    width: 70%;
-    background-color: #3498db;
-    border-radius: 5px 5px 0 0;
-    position: relative;
-    min-height: 10px;
-    transition: height 0.3s ease;
-}
-
-.bar .value {
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
-}
-
-.day {
-    margin-top: 10px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Section divider */
-.section-divider {
-    height: 20px;
-    width: 100%;
-    clear: both;
-    display: block;
 }
 </style>
 

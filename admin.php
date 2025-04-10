@@ -308,6 +308,148 @@ include('includes/header.php');
             background-color: #f8f9fa;
             color: #495057;
         }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Report details styles */
+        .report-details {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .report-details p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        .report-details-text {
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin: 10px 0 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .content-type-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .content-type-indicator.book {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .content-type-indicator.thread {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .content-type-indicator.comment {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .status-indicator.pending {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+
+        .status-indicator.resolved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-indicator.dismissed {
+            background-color: #f5f5f5;
+            color: #616161;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .view-content-btn {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .view-content-btn:hover {
+            background-color: #0b7dda;
+        }
     </style>
     
     <?php if (isset($_SESSION['success_message'])): ?>
@@ -891,7 +1033,7 @@ include('includes/header.php');
         <div class="modal-content">
             <span class="close">&times;</span>
             <h3>Report Details</h3>
-            <div id="report-details-content"></div>
+            <div id="report-detail-content"></div>
         </div>
     </div>
 </div>
