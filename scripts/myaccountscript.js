@@ -41,4 +41,69 @@ document.addEventListener("DOMContentLoaded", () => {
             editemailmsg.textContent = "";
         }
     });
-})
+    
+    // Initialize the comment history functionality
+    initCommentHistory();
+});
+
+/**
+ * Initialize the comment history functionality
+ */
+function initCommentHistory() {
+    // Get all comment content elements
+    const commentContents = document.querySelectorAll('.comment-content');
+    
+    // Add click event to each comment that has truncated content
+    commentContents.forEach(content => {
+        // Store the full content as a data attribute if it's truncated
+        const text = content.textContent;
+        if (text.endsWith('...')) {
+            // Set a data attribute to indicate this comment is expandable
+            content.setAttribute('data-expandable', 'true');
+            content.setAttribute('data-expanded', 'false');
+            
+            // Make it clickable to expand
+            content.style.cursor = 'pointer';
+            content.title = 'Click to expand';
+            
+            // Add click event
+            content.addEventListener('click', toggleCommentExpansion);
+        }
+    });
+}
+
+/**
+ * Toggle comment expansion when clicked
+ */
+function toggleCommentExpansion(event) {
+    const content = event.currentTarget;
+    const isExpanded = content.getAttribute('data-expanded') === 'true';
+    
+    if (isExpanded) {
+        // Collapse the comment
+        const text = content.textContent;
+        content.textContent = text.substring(0, 150) + '...';
+        content.setAttribute('data-expanded', 'false');
+        content.title = 'Click to expand';
+    } else {
+        // Expand the comment - fetch the full content
+        const commentItem = content.closest('.comment-item');
+        const commentId = commentItem.getAttribute('data-comment-id');
+        const commentType = commentItem.getAttribute('data-comment-type');
+        
+        // If we already know the full content
+        if (content.hasAttribute('data-full-content')) {
+            content.textContent = content.getAttribute('data-full-content');
+            content.setAttribute('data-expanded', 'true');
+            content.title = 'Click to collapse';
+        } else {
+            // For this demo, we'll just remove the ellipsis
+            // In a real implementation, you would fetch the full content via AJAX
+            const text = content.textContent;
+            const fullText = text.substring(0, text.length - 3); // Remove "..."
+            content.textContent = fullText;
+            content.setAttribute('data-expanded', 'true');
+            content.title = 'Click to collapse';
+        }
+    }
+}

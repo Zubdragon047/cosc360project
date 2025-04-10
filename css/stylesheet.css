@@ -150,27 +150,52 @@ h3 {
 }
 
 #edit-user-form {
-    margin-bottom: 50px;
-    justify-self: center;
-    width: max-content;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 600px;
     padding: 20px;
     border-radius: 8px;
     background-color: rgb(124, 228, 249);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2em;
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    #edit-username-error-message {color: red;}
-    #edit-email-error-message {color: red;}
-    #edit-password-error-message {color: red;}
-    #edit-new-password-error-message {color: red;}
-    #edit-confirm-password-error-message {color: red;}
-    input {width: 35ch;}
+    gap: 1.5em;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#edit-user-form h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    width: 100%;
+}
+
+#edit-user-form .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+#edit-user-form input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#edit-username-error-message,
+#edit-email-error-message,
+#edit-password-error-message,
+#edit-new-password-error-message,
+#edit-confirm-password-error-message {
+    color: red;
+    font-size: 0.85em;
+    margin-top: 5px;
 }
 
 #add-book-form {
@@ -1699,4 +1724,202 @@ h3 {
     height: 24px; /* Match height of input field */
     line-height: 1; /* Adjust line height for better text centering */
     font-size: 14px;
+}
+
+/* Comment History styles */
+.comment-history-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: rgb(124, 228, 249);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+.comment-history-section h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    color: #333;
+    text-align: center;
+}
+
+.comment-section {
+    margin-bottom: 25px;
+}
+
+.comment-section h4 {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #333;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.comment-list {
+    margin-top: 15px;
+}
+
+.comment-item {
+    padding: 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+}
+
+.comment-item:hover {
+    background-color: #f0f0f0;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.comment-header a {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.comment-header a:hover {
+    text-decoration: underline;
+}
+
+.comment-date {
+    color: #777;
+    font-size: 0.9em;
+}
+
+.comment-content {
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: #333;
+    padding: 5px 0;
+}
+
+.comment-actions {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.delete-comment-form {
+    display: inline-block;
+}
+
+.delete-comment-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.delete-comment-button:hover {
+    background-color: #d32f2f;
+}
+
+.user-comment-action {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.user-comment-action .delete-comment-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.user-comment-action .delete-comment-button:hover {
+    background-color: #d32f2f;
+}
+
+/* Responsive adjustments for account page */
+@media (max-width: 768px) {
+    #edit-user-form {
+        max-width: 100%;
+        padding: 15px;
+    }
+    
+    .comment-history-section {
+        max-width: 100%;
+        padding: 15px;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+    }
+    
+    .comment-date {
+        margin-top: 5px;
+    }
+    
+    .main-container {
+        padding: 15px 20px;
+    }
+    
+    .delete-comment-button {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+/* My Account page layout */
+.my-account-page {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+    align-items: center;
+}
+
+.my-account-page > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.my-account-page h2 {
+    width: 100%;
+    margin-bottom: 25px;
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Form button styling */
+.form-buttons {
+    margin-top: 15px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.form-buttons .submit {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.form-buttons .submit:hover {
+    background-color: #0052a3;
 }

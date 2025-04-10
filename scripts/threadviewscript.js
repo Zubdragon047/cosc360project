@@ -170,13 +170,22 @@ document.addEventListener("DOMContentLoaded", () => {
             commentHTML += `<a href="#" class="report-link" data-type="comment" data-id="${comment.id}">Report</a>`;
         }
         
-        // Add delete button for admins
+        // Add delete button for admins or if user is the comment owner
         if (comment.is_admin_viewing) {
             commentHTML += `
                 <form action="admin_actions.php" method="post" class="admin-comment-action">
                     <input type="hidden" name="action" value="delete_comment">
                     <input type="hidden" name="comment_id" value="${comment.id}">
                     <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this comment?')">Delete Comment</button>
+                </form>
+            `;
+        } else if (comment.is_comment_owner) {
+            commentHTML += `
+                <form action="delete_comment.php" method="post" class="user-comment-action">
+                    <input type="hidden" name="comment_id" value="${comment.id}">
+                    <input type="hidden" name="comment_type" value="thread">
+                    <input type="hidden" name="redirect" value="thread.php?id=${window.location.href.split('?id=')[1]}">
+                    <button type="submit" class="delete-comment-button" onclick="return confirm('Are you sure you want to delete this comment?')">Delete</button>
                 </form>
             `;
         }
