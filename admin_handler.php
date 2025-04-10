@@ -469,6 +469,336 @@ try {
             echo json_encode(['success' => true, 'report' => $report]);
             break;
             
+        case 'get_usage_report':
+            $reportType = isset($_GET['report_type']) ? $_GET['report_type'] : 'content';
+            $dateRange = isset($_GET['date_range']) ? $_GET['date_range'] : '30';
+            
+            try {
+                // Calculate start date based on range
+                if ($dateRange === 'all') {
+                    $startDate = '1900-01-01'; // Effectively all time
+                } else {
+                    $startDate = date('Y-m-d', strtotime("-$dateRange days"));
+                }
+                
+                $endDate = date('Y-m-d'); // Today
+                $response = ['success' => true];
+                
+                // Debug info
+                $response['debug'] = [
+                    'report_type' => $reportType,
+                    'date_range' => $dateRange,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate
+                ];
+                
+                // Generate report based on type
+                switch ($reportType) {
+                    case 'content':
+                        // Get content creation statistics
+                        $contentData = [
+                            'books' => [],
+                            'threads' => [],
+                            'comments' => []
+                        ];
+                        
+                        // Get book uploads by date
+                        $sql = "SELECT DATE(created_at) as date, COUNT(*) as count 
+                                FROM books 
+                                WHERE created_at BETWEEN :start_date AND :end_date 
+                                GROUP BY DATE(created_at) 
+                                ORDER BY date";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->bindParam(':start_date', $startDate);
+                        $stmt->bindParam(':end_date', $endDate);
+                        $stmt->execute();
+                        $contentData['books'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Get thread creation by date
+                        $sql = "SELECT DATE(created_at) as date, COUNT(*) as count 
+                                FROM threads 
+                                WHERE created_at BETWEEN :start_date AND :end_date 
+                                GROUP BY DATE(created_at) 
+                                ORDER BY date";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->bindParam(':start_date', $startDate);
+                        $stmt->bindParam(':end_date', $endDate);
+                        $stmt->execute();
+                        $contentData['threads'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Get comment creation by date
+                        $sql = "SELECT DATE(created_at) as date, COUNT(*) as count 
+                                FROM comments 
+                                WHERE created_at BETWEEN :start_date AND :end_date 
+                                GROUP BY DATE(created_at) 
+                                ORDER BY date";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->bindParam(':start_date', $startDate);
+                        $stmt->bindParam(':end_date', $endDate);
+                        $stmt->execute();
+                        $contentData['comments'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Get totals for comparison
+                        $prevPeriodStart = date('Y-m-d', strtotime("-" . ($dateRange * 2) . " days"));
+                        $prevPeriodEnd = date('Y-m-d', strtotime("-$dateRange days"));
+                        
+                        $sql = "SELECT 
+                                (SELECT COUNT(*) FROM books WHERE created_at BETWEEN :start_date AND :end_date) as books_current,
+                                (SELECT COUNT(*) FROM books WHERE created_at BETWEEN :prev_period_start AND :prev_period_end) as books_previous,
+                                (SELECT COUNT(*) FROM threads WHERE created_at BETWEEN :start_date AND :end_date) as threads_current,
+                                (SELECT COUNT(*) FROM threads WHERE created_at BETWEEN :prev_period_start AND :prev_period_end) as threads_previous,
+                                (SELECT COUNT(*) FROM comments WHERE created_at BETWEEN :start_date AND :end_date) as comments_current,
+                                (SELECT COUNT(*) FROM comments WHERE created_at BETWEEN :prev_period_start AND :prev_period_end) as comments_previous";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->bindParam(':start_date', $startDate);
+                        $stmt->bindParam(':end_date', $endDate);
+                        $stmt->bindParam(':prev_period_start', $prevPeriodStart);
+                        $stmt->bindParam(':prev_period_end', $prevPeriodEnd);
+                        $stmt->execute();
+                        $totals = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        $response['data'] = $contentData;
+                        $response['totals'] = $totals;
+                        $response['title'] = "Content Creation (" . ($dateRange === 'all' ? 'All Time' : "Last $dateRange days") . ")";
+                        break;
+                        
+                    case 'activity':
+                        // Get user activity metrics
+                        $sql = "SELECT u.username, 
+                                (SELECT COUNT(*) FROM books WHERE username = u.username) as book_count,
+                                (SELECT COUNT(*) FROM threads WHERE username = u.username) as thread_count,
+                                (SELECT COUNT(*) FROM comments WHERE username = u.username) as comment_count,
+                                (SELECT MAX(created_at) FROM comments WHERE username = u.username) as last_activity
+                                FROM users u
+                                WHERE ((SELECT COUNT(*) FROM books WHERE username = u.username) > 0 
+                                       OR (SELECT COUNT(*) FROM threads WHERE username = u.username) > 0 
+                                       OR (SELECT COUNT(*) FROM comments WHERE username = u.username) > 0)
+                                ORDER BY book_count + thread_count + comment_count DESC 
+                                LIMIT 20";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute();
+                        $activity = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Make sure we have the date column name for users
+                        if (!isset($dateColumnName)) {
+                            // Determine the date column name for the users table
+                            $dateColumnName = 'registration_date';
+                            try {
+                                $checkStmt = $pdo->prepare("SHOW COLUMNS FROM users LIKE 'registration_date'");
+                                $checkStmt->execute();
+                                if ($checkStmt->rowCount() == 0) {
+                                    $checkStmt = $pdo->prepare("SHOW COLUMNS FROM users LIKE 'created_at'");
+                                    $checkStmt->execute();
+                                    if ($checkStmt->rowCount() > 0) {
+                                        $dateColumnName = 'created_at';
+                                    }
+                                }
+                            } catch (PDOException $e) {
+                                error_log("Error checking date column in activity report: " . $e->getMessage());
+                            }
+                        }
+                        
+                        // Get total activity counts
+                        $sql = "SELECT 
+                                (SELECT COUNT(*) FROM books WHERE created_at BETWEEN :start_date AND :end_date) as book_count,
+                                (SELECT COUNT(*) FROM threads WHERE created_at BETWEEN :start_date AND :end_date) as thread_count,
+                                (SELECT COUNT(*) FROM comments WHERE created_at BETWEEN :start_date AND :end_date) as comment_count,
+                                (SELECT COUNT(DISTINCT username) FROM users 
+                                 WHERE username IN (SELECT DISTINCT username FROM comments WHERE created_at BETWEEN :start_date_1 AND :end_date_1)
+                                 OR username IN (SELECT DISTINCT username FROM threads WHERE created_at BETWEEN :start_date_2 AND :end_date_2)
+                                 OR username IN (SELECT DISTINCT username FROM books WHERE created_at BETWEEN :start_date_3 AND :end_date_3))
+                                 as active_users";
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->bindParam(':start_date', $startDate);
+                        $stmt->bindParam(':end_date', $endDate);
+                        $stmt->bindParam(':start_date_1', $startDate);
+                        $stmt->bindParam(':end_date_1', $endDate);
+                        $stmt->bindParam(':start_date_2', $startDate);
+                        $stmt->bindParam(':end_date_2', $endDate);
+                        $stmt->bindParam(':start_date_3', $startDate);
+                        $stmt->bindParam(':end_date_3', $endDate);
+                        $stmt->execute();
+                        $totals = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        $response['data'] = $activity;
+                        $response['totals'] = $totals;
+                        $response['title'] = "User Activity (" . ($dateRange === 'all' ? 'All Time' : "Last $dateRange days") . ")";
+                        break;
+                        
+                    case 'popular':
+                        // Most popular content stats
+                        $popular = [
+                            'books' => [],
+                            'threads' => []
+                        ];
+                        
+                        // Add views column to books table if it doesn't exist
+                        try {
+                            $checkStmt = $pdo->prepare("SHOW COLUMNS FROM books LIKE 'views'");
+                            $checkStmt->execute();
+                            if ($checkStmt->rowCount() == 0) {
+                                // Views column doesn't exist, add it
+                                $alterStmt = $pdo->prepare("ALTER TABLE books ADD COLUMN views INT DEFAULT 0");
+                                $alterStmt->execute();
+                                error_log("Added views column to books table");
+                            }
+                        } catch (PDOException $e) {
+                            error_log("Error checking/adding views column to books table: " . $e->getMessage());
+                        }
+                        
+                        // Add views column to threads table if it doesn't exist
+                        try {
+                            $checkStmt = $pdo->prepare("SHOW COLUMNS FROM threads LIKE 'views'");
+                            $checkStmt->execute();
+                            if ($checkStmt->rowCount() == 0) {
+                                // Views column doesn't exist, add it
+                                $alterStmt = $pdo->prepare("ALTER TABLE threads ADD COLUMN views INT DEFAULT 0");
+                                $alterStmt->execute();
+                                error_log("Added views column to threads table");
+                            }
+                        } catch (PDOException $e) {
+                            error_log("Error checking/adding views column to threads table: " . $e->getMessage());
+                        }
+                        
+                        // Check if views column exists in books table
+                        $viewsExistsInBooks = false;
+                        try {
+                            $checkStmt = $pdo->prepare("SHOW COLUMNS FROM books LIKE 'views'");
+                            $checkStmt->execute();
+                            $viewsExistsInBooks = ($checkStmt->rowCount() > 0);
+                        } catch (PDOException $e) {
+                            error_log("Error checking views column in books: " . $e->getMessage());
+                        }
+                        
+                        // Most viewed/popular books
+                        if ($viewsExistsInBooks) {
+                            // Check if book_comments table exists
+                            $bookCommentsExist = false;
+                            try {
+                                $checkStmt = $pdo->prepare("SHOW TABLES LIKE 'book_comments'");
+                                $checkStmt->execute();
+                                $bookCommentsExist = ($checkStmt->rowCount() > 0);
+                            } catch (PDOException $e) {
+                                error_log("Error checking book_comments table: " . $e->getMessage());
+                            }
+                            
+                            // Use views if the column exists
+                            if ($bookCommentsExist) {
+                                // Include both book_comments and thread comments
+                                $sql = "SELECT b.book_id, b.title, b.username, b.views, 
+                                        (SELECT COUNT(*) FROM book_comments bc WHERE bc.book_id = b.book_id) +
+                                        (SELECT COUNT(*) FROM comments c 
+                                         JOIN threads t ON c.thread_id = t.thread_id 
+                                         WHERE t.book_id = b.book_id) as comment_count
+                                        FROM books b
+                                        GROUP BY b.book_id
+                                        ORDER BY b.views DESC, comment_count DESC
+                                        LIMIT 10";
+                            } else {
+                                // Use only thread comments
+                                $sql = "SELECT b.book_id, b.title, b.username, b.views, 
+                                        COUNT(c.comment_id) as comment_count
+                                        FROM books b
+                                        LEFT JOIN threads t ON t.book_id = b.book_id
+                                        LEFT JOIN comments c ON c.thread_id = t.thread_id
+                                        GROUP BY b.book_id
+                                        ORDER BY b.views DESC, comment_count DESC
+                                        LIMIT 10";
+                            }
+                        } else {
+                            // Sort by comment count as a popularity metric
+                            // Check if book_comments table exists
+                            $bookCommentsExist = false;
+                            try {
+                                $checkStmt = $pdo->prepare("SHOW TABLES LIKE 'book_comments'");
+                                $checkStmt->execute();
+                                $bookCommentsExist = ($checkStmt->rowCount() > 0);
+                            } catch (PDOException $e) {
+                                error_log("Error checking book_comments table: " . $e->getMessage());
+                            }
+                            
+                            if ($bookCommentsExist) {
+                                // Include both book_comments and thread comments
+                                $sql = "SELECT b.book_id, b.title, b.username, 0 as views, 
+                                        (SELECT COUNT(*) FROM book_comments bc WHERE bc.book_id = b.book_id) +
+                                        (SELECT COUNT(*) FROM comments c 
+                                         JOIN threads t ON c.thread_id = t.thread_id 
+                                         WHERE t.book_id = b.book_id) as comment_count
+                                        FROM books b
+                                        GROUP BY b.book_id
+                                        ORDER BY comment_count DESC
+                                        LIMIT 10";
+                            } else {
+                                // Use only thread comments
+                                $sql = "SELECT b.book_id, b.title, b.username, 0 as views, 
+                                        COUNT(c.comment_id) as comment_count
+                                        FROM books b
+                                        LEFT JOIN threads t ON t.book_id = b.book_id
+                                        LEFT JOIN comments c ON c.thread_id = t.thread_id
+                                        GROUP BY b.book_id
+                                        ORDER BY comment_count DESC
+                                        LIMIT 10";
+                            }
+                        }
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute();
+                        $popular['books'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        // Check if views column exists in threads table
+                        $viewsExistsInThreads = false;
+                        try {
+                            $checkStmt = $pdo->prepare("SHOW COLUMNS FROM threads LIKE 'views'");
+                            $checkStmt->execute();
+                            $viewsExistsInThreads = ($checkStmt->rowCount() > 0);
+                        } catch (PDOException $e) {
+                            error_log("Error checking views column in threads: " . $e->getMessage());
+                        }
+                        
+                        // Most active threads 
+                        if ($viewsExistsInThreads) {
+                            $sql = "SELECT t.thread_id, t.title, t.username, t.views, 
+                                    COUNT(c.comment_id) as comment_count
+                                    FROM threads t
+                                    LEFT JOIN comments c ON t.thread_id = c.thread_id
+                                    GROUP BY t.thread_id
+                                    ORDER BY comment_count DESC, t.views DESC
+                                    LIMIT 10";
+                        } else {
+                            $sql = "SELECT t.thread_id, t.title, t.username, 0 as views, 
+                                    COUNT(c.comment_id) as comment_count
+                                    FROM threads t
+                                    LEFT JOIN comments c ON t.thread_id = c.thread_id
+                                    GROUP BY t.thread_id
+                                    ORDER BY comment_count DESC
+                                    LIMIT 10";
+                        }
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute();
+                        $popular['threads'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        $response['data'] = $popular;
+                        $response['title'] = "Content Popularity (" . ($dateRange === 'all' ? 'All Time' : "Last $dateRange days") . ")";
+                        break;
+                        
+                    default:
+                        throw new Exception("Invalid report type: $reportType");
+                }
+                
+                echo json_encode($response);
+            } catch (PDOException $e) {
+                error_log("Database error in get_usage_report: " . $e->getMessage());
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Database error: ' . $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'report_type' => isset($reportType) ? $reportType : 'unknown'
+                ]);
+            } catch (Exception $e) {
+                error_log("Error in get_usage_report: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+            break;
+            
         default:
             echo json_encode(['success' => false, 'message' => 'Invalid action']);
             break;

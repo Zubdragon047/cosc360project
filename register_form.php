@@ -74,10 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'firstname'=> $firstname,
             'lastname'=> $lastname,
             'profilepic' => $profilepic,
-            'type' => 'user'
+            'type' => 'user',
+            'registration_date' => date('Y-m-d H:i:s')
         ];
-        $sql = "INSERT INTO users (username, password, email, firstname, lastname, profilepic, type) 
-                VALUES (:username, :password, :email, :firstname, :lastname, :profilepic, :type)";
+        $sql = "INSERT INTO users (username, password, email, firstname, lastname, profilepic, type, registration_date) 
+                VALUES (:username, :password, :email, :firstname, :lastname, :profilepic, :type, :registration_date)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($data);
         echo "Registration successful, redirecting to login page...";

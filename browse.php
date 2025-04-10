@@ -13,9 +13,8 @@ include('includes/header.php');
 
 <div class="main-container">
     <h2>Browse Books</h2>
-    <h3>Search</h3>
 
-        <form id="search-form" method="get" action="browse.php" novalidate>
+        <form id="search-form" class="browse-search-form" method="get" action="browse.php" novalidate>
             <div class="form-group">
                 <input type="text" id="search" name="search" placeholder="Enter a book title or category." 
                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
