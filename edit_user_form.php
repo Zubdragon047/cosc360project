@@ -16,11 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Username not set.");
     }
     if (isset($_POST['edit-old-password'])) {
-        if ($_POST['edit-old-password'] == "" || $_POST['edit-old-password'] == null) {
+        if ($_POST['edit-old-password'] == "" || $_POST['edit-old-password'] == null || md5($_POST['edit-old-password']) != $_SESSION['password']) {
             die("Current password is required.");
         } else {
             $oldpassword = $_POST["edit-old-password"];
+            $oldpass_hash = md5($oldpassword);
             $newpassword = $oldpassword;
+            $newpass_hash = md5($newpassword);
         }
     } else {
         die("Current password not set.");
@@ -34,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($_POST['edit-new-password'] != "" && $_POST['edit-new-password'] != null) {
             if ($_POST['edit-new-password'] == $confirmpassword) {
                 $newpassword = $confirmpassword;
+                $newpass_hash = md5($confirmpassword);
             }
         }
     }
@@ -79,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $data = [
             'username' => $newusername,
-            'password' => $newpassword,
+            'password' => $newpass_hash,
             'email' => $newemail,
             'firstname'=> $newfirstname,
             'lastname'=> $newlastname,
