@@ -962,21 +962,39 @@ function setupReportActionListeners() {
 
 // Function to show report details in modal
 function showReportDetails(reportId) {
+    console.log("Showing report details for report ID:", reportId);
+    
+    // Show loading indicator in the modal
+    const modal = document.getElementById('report-details-modal');
+    const content = document.getElementById('report-detail-content');
+    
+    if (!content) {
+        console.error("Error: report-detail-content element not found!");
+        alert("Error: Could not find the content container for report details.");
+        return;
+    }
+    
+    // Show the modal with a loading message
+    content.innerHTML = '<div class="loading">Loading report details...</div>';
+    modal.style.display = 'block';
+    
     fetch(`admin_handler.php?action=get_report_details&report_id=${reportId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                const modal = document.getElementById('report-details-modal');
-                const content = document.getElementById('report-detail-content');
-                
                 let html = '<div class="report-details">';
-                html += `<p><strong>Content Type:</strong> ${data.report.content_type}</p>`;
+                html += `<p><strong>Content Type:</strong> <span class="content-type-indicator ${data.report.content_type}">${data.report.content_type}</span></p>`;
                 html += `<p><strong>Content ID:</strong> ${data.report.content_id}</p>`;
                 html += `<p><strong>Reporter:</strong> ${data.report.reporter_username}</p>`;
                 html += `<p><strong>Reason:</strong> ${data.report.reason}</p>`;
                 html += `<p><strong>Details:</strong></p>`;
                 html += `<div class="report-details-text">${data.report.details || 'No additional details provided.'}</div>`;
-                html += `<p><strong>Status:</strong> ${data.report.status}</p>`;
+                html += `<p><strong>Status:</strong> <span class="status-indicator ${data.report.status}">${data.report.status}</span></p>`;
                 html += `<p><strong>Date:</strong> ${new Date(data.report.created_at).toLocaleString()}</p>`;
                 
                 // Add view content link based on type
@@ -989,17 +1007,37 @@ function showReportDetails(reportId) {
                     viewLink = `thread.php?id=${data.report.thread_id}#comment-${data.report.content_id}`;
                 }
                 
-                html += `<p><a href="${viewLink}" target="_blank" class="view-content-link">View Reported Content</a></p>`;
+                html += `<div class="report-actions">`;
+                html += `<a href="${viewLink}" target="_blank" class="view-content-btn">View Reported Content</a>`;
+                
+                // Add action buttons based on status
+                if (data.report.status === 'pending') {
+                    html += `<form action="admin_actions.php" method="post" class="inline-form">
+                            <input type="hidden" name="action" value="resolve_report">
+                            <input type="hidden" name="report_id" value="${data.report.report_id}">
+                            <button type="submit" class="resolve-button">Resolve Report</button>
+                        </form>
+                        <form action="admin_actions.php" method="post" class="inline-form">
+                            <input type="hidden" name="action" value="dismiss_report">
+                            <input type="hidden" name="report_id" value="${data.report.report_id}">
+                            <button type="submit" class="dismiss-button">Dismiss Report</button>
+                        </form>`;
+                }
+                
+                html += `</div>`;
                 html += '</div>';
                 
                 content.innerHTML = html;
-                modal.style.display = 'block';
             } else {
-                alert('Error loading report details: ' + data.message);
+                content.innerHTML = `<div class="error-message">Error loading report details: ${data.message}</div>`;
             }
         })
         .catch(error => {
-            alert('Error loading report details: ' + error.message);
+            console.error("Error fetching report details:", error);
+            content.innerHTML = `<div class="error-message">
+                <p>Error loading report details: ${error.message}</p>
+                <p>Please try again or reload the page.</p>
+            </div>`;
         });
 }
 
