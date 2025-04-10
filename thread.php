@@ -76,16 +76,33 @@ include('includes/header.php');
         
         .comment-footer {
             margin-top: 10px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
             padding-top: 10px;
             border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
         
         .comment-footer a {
-            margin-right: 10px;
+            display: inline-block;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            padding: 5px 0;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .report-link {
+            position: relative;
+            top: 0;
+        }
+        
+        .comment-footer a:hover {
+            color: #777;
+            text-decoration: underline;
         }
         
         .comment {
@@ -170,19 +187,26 @@ include('includes/header.php');
         
         .thread-actions a {
             margin-right: 15px;
-        }
-        
-        .report-link {
-            color: #777;
+            display: inline-block;
             text-decoration: none;
-            padding: 3px 8px;
-            border-radius: 3px;
-            transition: background-color 0.2s;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+            transition: color 0.2s ease;
         }
         
-        .report-link:hover {
-            background-color: #f0f0f0;
-            color: #555;
+        .thread-actions a:hover {
+            color: #777;
+            text-decoration: underline;
+        }
+        
+        .new-comment {
+            animation: highlight 3s;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: #fffde7; }
+            100% { background-color: white; }
         }
     </style>
     
