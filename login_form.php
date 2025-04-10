@@ -5,6 +5,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     if (isset($_POST['password'])) {
         $password = $_POST['password'];
+        $pass_hash = md5($password);
     }
 
     try {
@@ -15,10 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $result = $pdo->query($sql);
         while ($row = $result->fetch()) {
             if ($row['username'] == $username) {
-                if ($row['password'] == $password) {
+                if ($row['password'] == $pass_hash) {
                     session_start();
                     $_SESSION['username'] = $username;
-                    $_SESSION['password'] = $password;
+                    $_SESSION['password'] = $pass_hash;
                     $_SESSION['email'] = $row['email'];
                     $_SESSION['firstname'] = $row['firstname'];
                     $_SESSION['lastname'] = $row['lastname'];
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     // Redirect admin users to admin dashboard, regular users to dashboard
                     if ($row['type'] === 'admin') {
-                        header('Location: admin.php');
+                        header('Location: admin.php#_top');
                     } else {
                         header('Location: dashboard.php');
                     }

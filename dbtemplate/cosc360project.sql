@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 02, 2025 at 07:19 AM
+-- Generation Time: Apr 10, 2025 at 08:54 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -120,7 +120,8 @@ CREATE TABLE `threads` (
 INSERT INTO `threads` (`thread_id`, `title`, `username`, `book_id`, `content`, `created_at`, `updated_at`) VALUES
 (1, 'Have you guys read this book', 'user1', NULL, 'I think it\'s super interesting', '2025-03-22 20:46:36', '2025-03-23 22:42:57'),
 (2, 'AJAX thread test', 'user1', NULL, 'TESTING', '2025-03-23 23:08:12', '2025-03-23 23:10:11'),
-(3, 'AJAX Listing Test', 'User2', NULL, 'Here', '2025-03-23 23:11:02', '2025-03-24 01:04:23');
+(3, 'AJAX Listing Test', 'User2', NULL, 'Here', '2025-03-23 23:11:02', '2025-03-24 01:04:23'),
+(4, 'TESTING FOR ADMIN DASHBAORD', 'zubs', NULL, 'just a test', '2025-04-08 03:13:41', '2025-04-08 03:14:03');
 
 -- --------------------------------------------------------
 
@@ -130,7 +131,7 @@ INSERT INTO `threads` (`thread_id`, `title`, `username`, `book_id`, `content`, `
 
 CREATE TABLE `users` (
   `username` varchar(25) NOT NULL,
-  `password` varchar(25) NOT NULL,
+  `password` varchar(33) NOT NULL,
   `email` varchar(25) NOT NULL,
   `firstname` varchar(25) NOT NULL,
   `lastname` varchar(50) NOT NULL,
@@ -143,10 +144,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`username`, `password`, `email`, `firstname`, `lastname`, `profilepic`, `type`) VALUES
-('admin', 'admin', 'admin@gmail.com', 'admin', '', './images/emptyprofilepic.jpg', 'user'),
-('user1', 'user1', 'user1@gmail.com', 'user1', 'user1', './profilepics/user1.jpg', 'user'),
-('User2', 'User2', 'user2@gmail.com', 'User2', '', './images/emptyprofilepic.jpg', 'user'),
-('zubs', 'smartass', 'zubs047@gmail.com', 'Adam', 'Zabenskie', './profilepics/zubs.jpg', 'admin');
+('admin', '21232f297a57a5a743894a0e4a801fc3', 'admin@gmail.com', 'admin', '', './images/emptyprofilepic.jpg', 'admin'),
+('user1', '24c9e15e52afc47c225b757e7bee1f9d', 'user1@gmail.com', 'user1', 'user1', './profilepics/user1.jpg', 'user'),
+('User2', 'a09bccf2b2963982b34dc0e08d8b582a', 'user2@gmail.com', 'User2', '', './images/emptyprofilepic.jpg', 'user'),
+('zubs', '146b2ea8e7521b80ca48e185ddf92fe8', 'zubs047@gmail.com', 'Adam', 'Zabenskie', './profilepics/zubs.jpg', 'admin');
 
 --
 -- Indexes for dumped tables
@@ -210,13 +211,13 @@ ALTER TABLE `book_requests`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `threads`
 --
 ALTER TABLE `threads`
-  MODIFY `thread_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `thread_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables

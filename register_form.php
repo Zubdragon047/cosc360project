@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             die("Password is required.");
         } else {
             $password = $_POST["password"];
+            $pass_hash = md5($password);
         }
     } else {
         die("Password not set.");
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $data = [
             'username' => $username,
-            'password' => $password,
+            'password' => $pass_hash,
             'email' => $email,
             'firstname'=> $firstname,
             'lastname'=> $lastname,

@@ -404,7 +404,7 @@ function redirectBack() {
     if ($returnToDetail) {
         header("Location: " . $_SERVER['HTTP_REFERER']);
     } else {
-        header("Location: admin.php#reports");
+        header("Location: admin.php");
     }
     exit;
 }
