@@ -40,7 +40,6 @@ if (session_status() == PHP_SESSION_NONE) {
             <?php endif; ?>
             <nav class="header-nav-bottom">
                 <a href="home.php"><button>Home</button></a>
-                <a href="about.php"><button>About</button></a>
                 <a href="browse.php"><button>Browse</button></a>
                 <?php if (isset($_SESSION['username'])): ?>
                     <a href="dashboard.php"><button>Dashboard</button></a>
